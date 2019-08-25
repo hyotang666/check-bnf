@@ -2,9 +2,11 @@
 (in-package :asdf)
 (defsystem "check-bnf"
   :version
-  "0.0.0"
+  "0.1.0"
   :depends-on
-  nil
+  (
+   "millet" ; Wrapper for implementation dependent tiny utilities.
+   )
   :pathname
   "src/"
   :components
