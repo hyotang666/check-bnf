@@ -50,6 +50,7 @@
 	      (syntax-error 'check-bnf "Require at least one, but null"))))
     (clause+ clause+))
 
+  ;; Body of CHECK-BNF.
   `(labels,(loop :for clause :in clause+
 		 :collect (<local-fun> clause))
      (,(caar clause+),(caar clause+))))
