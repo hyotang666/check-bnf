@@ -40,23 +40,23 @@
 
   ;; THIS IS THE WHAT WE WANT TO GENERATE.
   (labels((clause+(clause+)
-	    (if clause+
+	    (if(null clause+)
+	      (syntax-error 'check-bnf "Require at least one, but null")
 	      (loop :for (var . spec+) :in clause+
 		    :do (var var)
-		    (spec+ spec+))
-	      (syntax-error 'check-bnf "Require at least one, but null")))
+		    (spec+ spec+))))
 	  (var(var)
 	    (unless(typep var 'symbol)
 	      (syntax-error 'check-bnf "var := SYMBOL, but ~S~%in ~S"
 			    var whole)))
 	  (spec+(spec+)
-	    (if spec+
+	    (if(null spec+)
+	      (syntax-error 'check-bnf "Require at least one, but null")
 	      (unless(every (lambda(elt)
 			      (typep elt 'type-specifier))
 			    spec+)
 		(syntax-error 'check-bnf "spec := TYPE-SPECIFIER, but ~S~%in ~S"
-			      spec+ whole))
-	      (syntax-error 'check-bnf "Require at least one, but null"))))
+			      spec+ whole)))))
     (let((*whole* whole)
 	 (*name* 'check-bnf))
       (clause+ clause+)))
