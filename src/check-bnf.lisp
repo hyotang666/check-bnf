@@ -57,14 +57,16 @@
 		(syntax-error 'check-bnf "spec := TYPE-SPECIFIER, but ~S~%in ~S"
 			      spec+ whole))
 	      (syntax-error 'check-bnf "Require at least one, but null"))))
-    (let((*whole* whole?)
-	 (*name* name?))
+    (let((*whole* whole)
+	 (*name* 'check-bnf))
       (clause+ clause+)))
 
   ;; Body of CHECK-BNF.
   `(labels,(loop :for clause :in clause+
 		 :collect (<local-fun> clause))
-     (,(caar clause+),(caar clause+))))
+     (let((*name* ,name?)
+	  (*whole* ,whole?))
+       (,(caar clause+),(caar clause+)))))
 
 (defun <local-fun>(clause)
   (destructuring-bind(name . spec+)clause
