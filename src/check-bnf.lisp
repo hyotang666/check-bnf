@@ -21,7 +21,9 @@
 	 :format-arguments format-arguments))
 
 (deftype type-specifier()t)
-(deftype expression()t)
+(deftype expression(&key eval)
+  (declare(ignore eval))
+  t)
 
 (defmacro check-bnf(&whole whole &rest clause+)
   #++(check-bnf(clause+ (var spec+))
