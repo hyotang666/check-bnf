@@ -30,12 +30,14 @@
 
 (defmacro check-bnf(&whole whole(&key ((:whole whole?)) name?)
 			   &rest clause+)
+  ;; THIS IS THE WHAT WE WANT TO WRITE.
   #++(check-bnf(:whole whole :name 'check-bnf)
        (whole? (expression :eval t))
        (name? symbol)
        (clause+ (var spec+))
        (var symbol)
        (spec+ type-spcifier))
+
   ;; THIS IS THE WHAT WE WANT TO GENERATE.
   (labels((clause+(clause+)
 	    (if clause+
