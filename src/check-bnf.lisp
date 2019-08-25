@@ -28,7 +28,8 @@
 (defvar *whole* nil)
 (defvar *name* nil)
 
-(defmacro check-bnf(&whole whole(&key ((:whole whole?)) name?)
+(defmacro check-bnf(&whole whole(&key ((:whole whole?))
+				      ((:name name?)))
 			   &rest clause+)
   ;; THIS IS THE WHAT WE WANT TO WRITE.
   #++(check-bnf(:whole whole :name 'check-bnf)
