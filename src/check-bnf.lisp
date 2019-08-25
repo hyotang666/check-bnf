@@ -19,3 +19,113 @@
 	 :name name
 	 :format-control format-control
 	 :format-arguments format-arguments))
+
+(deftype type-specifier()t)
+(deftype expression()t)
+
+(defmacro check-bnf(&whole whole &rest clause+)
+  #++(check-bnf(clause+ (var spec+))
+       (var symbol)
+       (spec+ type-spcifier))
+  ;; THIS IS THE WHAT WE WANT TO GENERATE.
+  (labels((clause+(clause+)
+	    (if clause+
+	      (loop :for (var . spec+) :in clause+
+		    :do (var var)
+		    (spec+ spec+))
+	      (syntax-error 'check-bnf "Require at least one, but null")))
+	  (var(var)
+	    (unless(typep var 'symbol)
+	      (syntax-error 'check-bnf "var := SYMBOL, but ~S~%in ~S"
+			    var whole)))
+	  (spec+(spec+)
+	    (if spec+
+	      (unless(every (lambda(elt)
+			      (typep elt 'type-specifier))
+			    spec+)
+		(syntax-error 'check-bnf "spec := TYPE-SPECIFIER, but ~S~%in ~S"
+			      spec+ whole))
+	      (syntax-error 'check-bnf "Require at least one, but null"))))
+    (clause+ clause+))
+
+  `(labels,(loop :for clause :in clause+
+		 :collect (<local-fun> clause))
+     (,(caar clause+),(caar clause+))))
+
+(defun <local-fun>(clause)
+  (destructuring-bind(name . spec+)clause
+    (case(char (symbol-name name)
+	       (1-(length(symbol-name name))))
+      (#\+ (<+form> name spec+))
+      (#\* (<*form> name spec+))
+      (#\? (<?form> name spec+))
+      (otherwise
+	(<default-form> name spec+)))))
+
+(defun <default-form>(name spec+)
+  (if(cdr spec+)
+    (error "BNF definition error: ~S must have + or * its name at last."
+	   name)
+    `(,name(,name)
+       ,(<check-type-form> name (car spec+)))))
+
+(defun <?form>(name spec+)
+  (if(cdr spec+)
+    (error "BNF definition error: ~S must have + or * its name at last."
+	   name)
+    `(,name(,name)
+       (when ,name
+	 ,(<check-type-form> name (car spec+))))))
+
+(defun <check-type-form>(name type-specifier)
+  `(unless(typep ,name ',type-specifier)
+     (error "~A := ~A~%but ~S is ~S"
+	    ',name ',type-specifier
+	    ,name (type-of ,name))))
+
+(defun <*form>(name spec+)
+  `(,name(,name)
+     ,(<*form-body> name spec+)))
+
+(defun <*form-body>(name spec+)
+  (let*((length
+	  (length spec+))
+	(gsyms
+	  (alexandria:make-gensym-list length)))
+    `(progn
+       ,@(when(< 1 length)
+	   `((unless(zerop(mod (length ,name),length))
+	       (error "Length mismatch"))))
+       (loop :for ,gsyms :on ,name
+	     :by ,(let((length(length spec+)))
+		    (case length
+		      (1 ''cdr)
+		      (2 ''cddr)
+		      (3 ''cdddr)
+		      (4 ''cddddr)
+		      (otherwise `(lambda(list)
+				    (nthcdr ,length list)))))
+	     :do
+	     ,@(loop :for g :in gsyms
+		     :for elt :in spec+
+		     :collect (<local-check-form> g elt))))))
+
+(defun <local-check-form>(name elt &optional fun)
+  (cond
+    ((millet:type-specifier-p elt)
+     (<check-type-form> name elt))
+    ((atom elt)
+     (if fun
+       `(,fun ,elt ,name)
+       `(,elt ,name)))
+    ((consp elt)
+     (alexandria:with-gensyms(a b)
+       `(loop :for ,a :in ',elt
+	      :for ,b :in ,name
+	      :do ,(<local-check-form> b a 'funcall))))))
+
+(defun <+form>(name spec+)
+  `(,name(,name)
+     (if(null ,name)
+       (error "Required")
+       ,(<*form-body> name spec+))))
