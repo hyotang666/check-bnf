@@ -25,8 +25,15 @@
   (declare(ignore eval))
   t)
 
-(defmacro check-bnf(&whole whole &rest clause+)
-  #++(check-bnf(clause+ (var spec+))
+(defvar *whole* nil)
+(defvar *name* nil)
+
+(defmacro check-bnf(&whole whole(&key ((:whole whole?)) name?)
+			   &rest clause+)
+  #++(check-bnf(:whole whole :name 'check-bnf)
+       (whole? (expression :eval t))
+       (name? symbol)
+       (clause+ (var spec+))
        (var symbol)
        (spec+ type-spcifier))
   ;; THIS IS THE WHAT WE WANT TO GENERATE.
@@ -48,7 +55,9 @@
 		(syntax-error 'check-bnf "spec := TYPE-SPECIFIER, but ~S~%in ~S"
 			      spec+ whole))
 	      (syntax-error 'check-bnf "Require at least one, but null"))))
-    (clause+ clause+))
+    (let((*whole* whole?)
+	 (*name* name?))
+      (clause+ clause+)))
 
   ;; Body of CHECK-BNF.
   `(labels,(loop :for clause :in clause+
