@@ -42,8 +42,10 @@
   #++(check-bnf(:whole whole :name 'check-bnf)
        (whole? (expression :eval t))
        (name? (expression :eval t))
-       (clause+ (var spec+))
-       (var symbol)
+       (clause+ (var-spec spec+))
+       (var-spec (or name alias))
+       (name symbol)
+       (alias (name name))
        (spec+ type-specifier))
 
   ;; THIS IS THE WHAT WE WANT TO GENERATE.
