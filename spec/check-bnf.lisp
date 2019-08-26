@@ -37,6 +37,7 @@
 
 ; If you do not like names var as XXX*, you can specify alias.
 #?(let((vars '(symbol)))
+    (declare(ignore vars))
     (check-bnf()
       ((var* vars)symbol)))
 => NIL
