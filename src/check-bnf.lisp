@@ -34,7 +34,7 @@
   ;; THIS IS THE WHAT WE WANT TO WRITE.
   #++(check-bnf(:whole whole :name 'check-bnf)
        (whole? (expression :eval t))
-       (name? symbol)
+       (name? (expression :eval t))
        (clause+ (var spec+))
        (var symbol)
        (spec+ type-spcifier))
