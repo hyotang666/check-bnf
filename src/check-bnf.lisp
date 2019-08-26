@@ -164,11 +164,13 @@
 		 (lambda(&rest args)
 		   (loop :for (nil c) :on args :by #'cddr
 			 :when c
-			 :do (syntax-error "~S := ~{~S~^ ~}~%~
-					   but ~{~S~*~^ ~}~%~?"
-					   ',name ',spec+ args
-					   "~2*~S is ~S, not ~3:* ~S"
-					   (simple-condition-format-arguments c))))
+			 :do (syntax-error
+			       "~:T~S := ~{~S~^ ~}~%~:Tbut ~{~S~*~^ ~}~?~@?"
+			       ',name ',spec+ args
+			       "~%~:T~2*~S is ~S, not ~3:* ~S."
+			       (simple-condition-format-arguments c)
+			       "~%~:Tin ~S"
+			       ,name)))
 		 ,@forms))))))
 
 (defun <local-check-form>(name var spec &optional fun)
