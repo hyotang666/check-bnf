@@ -53,12 +53,7 @@
 			    var)))
 	  (spec+(spec+)
 	    (if(null spec+)
-	      (syntax-error "Require at least one, but null")
-	      (unless(every (lambda(elt)
-			      (typep elt 'type-specifier))
-			    spec+)
-		(syntax-error "spec := TYPE-SPECIFIER, but ~S"
-			      spec+)))))
+	      (syntax-error "Require at least one, but null"))))
     (let((*whole* whole)
 	 (*name* 'check-bnf))
       (clause+ clause+)))
