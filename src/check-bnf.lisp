@@ -195,6 +195,26 @@
 	      :for ,b :in ,name
 	      :do ,(<local-check-form> b b a 'funcall))))))
 
+(defun local-check(name spec)
+  (cond
+    ((millet:type-specifier-p spec)
+     (unless(eql t (millet:type-expand spec))
+       (unless(typep name spec)
+	 (syntax-error "~A := ~A~%but ~S, it is type-of ~S"
+		       name spec name (type-of name)))))
+    ((atom spec)
+     (funcall spec name))
+    ((typep spec '(cons (eql or)*))
+     (loop :for (spec+ . rest) :on (cdr spec)
+	   :if (null rest)
+	   :do (handler-case(local-check name spec+)
+		 (syntax-error()
+		   (syntax-error "~S := ~S but not exhausted. ~S"
+				 name spec spec+)))
+	   :else :do (ignore-errors (local-check name spec+))))
+    ((consp spec)
+     (mapc #'local-check name spec))))
+
 (defun <+form>(name spec+)
   (let((*form
 	 (<*form-body> name spec+)))
