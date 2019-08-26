@@ -2,11 +2,12 @@
 (in-package :asdf)
 (defsystem "check-bnf"
   :version
-  "0.4.6"
+  "0.4.7"
   :depends-on
   (
    "millet" ; Wrapper for implementation dependent tiny utilities.
    "alexandria" ; Public domain utilities.
+   "trivial-cltl2" ; Wrapper for cltl2.
    )
   :pathname
   "src/"

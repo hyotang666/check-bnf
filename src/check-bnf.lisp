@@ -28,8 +28,10 @@
 (defvar *whole* nil)
 (defvar *name* nil)
 
-(defmacro check-bnf(&whole whole(&key ((:whole whole?))
-				      ((:name name?)))
+(defmacro check-bnf(&whole whole
+			   &environment env
+			   (&key ((:whole whole?))
+				 ((:name name?)))
 			   &rest clause+)
   ;; THIS IS THE WHAT WE WANT TO WRITE.
   #++(check-bnf(:whole whole :name 'check-bnf)
@@ -67,7 +69,9 @@
 		 :collect (<local-fun> clause))
      (let((*name* ,name?)
 	  (*whole* ,whole?))
-       (,(caar clause+),(caar clause+)))))
+       ,@(loop :for (name) :in clause+
+	       :when (eq :lexical (cltl2:variable-information name env))
+	       :collect `(,name ,name)))))
 
 (defun <local-fun>(clause)
   (destructuring-bind(name . spec+)clause
