@@ -115,24 +115,30 @@
   (let*((length
 	  (length spec+))
 	(gsyms
-	  (alexandria:make-gensym-list length)))
-    `(progn
-       ,@(when(< 1 length)
-	   `((unless(zerop(mod (length ,name),length))
-	       (error "Length mismatch"))))
-       (loop :for ,gsyms :on ,name
-	     :by ,(let((length(length spec+)))
-		    (case length
-		      (1 ''cdr)
-		      (2 ''cddr)
-		      (3 ''cdddr)
-		      (4 ''cddddr)
-		      (otherwise `(lambda(list)
-				    (nthcdr ,length list)))))
-	     :do
-	     ,@(loop :for g :in gsyms
-		     :for elt :in spec+
-		     :collect (<local-check-form> g elt))))))
+	  (alexandria:make-gensym-list length))
+	(forms
+	  (loop :for g :in gsyms
+		:for elt :in spec+
+		:for form = (<local-check-form> g elt)
+		:when form
+		:collect form))
+	)
+    (if(null forms)
+      `(declare(ignore ,name))
+      `(progn
+	 ,@(when(< 1 length)
+	     `((unless(zerop(mod (length ,name),length))
+		 (error "Length mismatch"))))
+	 (loop :for ,gsyms :on ,name
+	       :by ,(let((length(length spec+)))
+		      (case length
+			(1 ''cdr)
+			(2 ''cddr)
+			(3 ''cdddr)
+			(4 ''cddddr)
+			(otherwise `(lambda(list)
+				      (nthcdr ,length list)))))
+	       :do ,@forms)))))
 
 (defun <local-check-form>(name elt &optional fun)
   (cond
@@ -150,7 +156,11 @@
 	      :do ,(<local-check-form> b a 'funcall))))))
 
 (defun <+form>(name spec+)
-  `(,name(,name)
-     (if(null ,name)
-       (error "Required")
-       ,(<*form-body> name spec+))))
+  (let((*form
+	 (<*form-body> name spec+)))
+    `(,name(,name)
+       ,(if(typep *form '(cons (eql declare)*))
+	  *form
+	  `(if(null ,name)
+	     (error "Required")
+	     ,*form)))))
