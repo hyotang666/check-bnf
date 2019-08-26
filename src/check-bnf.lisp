@@ -1,7 +1,13 @@
 (in-package :cl-user)
 (defpackage :check-bnf
   (:use :cl)
-  (:export))
+  (:export
+    ;;;; Main API
+    #:check-bnf
+
+    ;;;; Miscellaneous TYPE.
+    #:expression
+    ))
 (in-package :check-bnf)
 
 (define-condition syntax-error(program-error simple-error)
