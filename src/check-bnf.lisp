@@ -98,9 +98,9 @@
 
 (defun <check-type-form>(name type-specifier)
   `(unless(typep ,name ',type-specifier)
-     (error "~A := ~A~%but ~S is ~S"
-	    ',name ',type-specifier
-	    ,name (type-of ,name))))
+     (syntax-error "~A := ~A~%but ~S is ~S"
+		   ',name ',type-specifier
+		   ,name (type-of ,name))))
 
 (defun <*form>(name spec+)
   `(,name(,name)
@@ -123,7 +123,7 @@
       `(progn
 	 ,@(when(< 1 length)
 	     `((unless(zerop(mod (length ,name),length))
-		 (error "Length mismatch"))))
+		 (syntax-error "Length mismatch"))))
 	 (loop :for ,gsyms :on ,name
 	       :by ,(let((length(length spec+)))
 		      (case length
@@ -155,7 +155,7 @@
 	 (<*form-body> name spec+)))
     `(,name(,name)
        (if(null ,name)
-	 (error "Required")
+	 (syntax-error "Required at least one but NULL.")
 	 ,(if(typep *form '(cons (eql declare)*))
 	    nil
 	    *form)))))
