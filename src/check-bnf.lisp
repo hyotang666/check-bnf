@@ -38,7 +38,7 @@
        (name? (expression :eval t))
        (clause+ (var spec+))
        (var symbol)
-       (spec+ type-spcifier))
+       (spec+ type-specifier))
 
   ;; THIS IS THE WHAT WE WANT TO GENERATE.
   (labels((clause+(clause+)
