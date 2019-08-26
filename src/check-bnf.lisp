@@ -119,8 +119,8 @@
 	  (alexandria:make-gensym-list length))
 	(forms
 	  (loop :for g :in gsyms
-		:for elt :in spec+
-		:for form = (<local-check-form> g elt)
+		:for spec :in spec+
+		:for form = (<local-check-form> g spec)
 		:when form
 		:collect form))
 	)
@@ -141,18 +141,18 @@
 				      (nthcdr ,length list)))))
 	       :do ,@forms)))))
 
-(defun <local-check-form>(name elt &optional fun)
+(defun <local-check-form>(name spec &optional fun)
   (cond
-    ((millet:type-specifier-p elt)
-     (unless(eql t (millet:type-expand elt))
-       (<check-type-form> name elt)))
-    ((atom elt)
+    ((millet:type-specifier-p spec)
+     (unless(eql t (millet:type-expand spec))
+       (<check-type-form> name spec)))
+    ((atom spec)
      (if fun
-       `(,fun ,elt ,name)
-       `(,elt ,name)))
-    ((consp elt)
+       `(,fun ,spec ,name)
+       `(,spec ,name)))
+    ((consp spec)
      (alexandria:with-gensyms(a b)
-       `(loop :for ,a :in ',elt
+       `(loop :for ,a :in ',spec
 	      :for ,b :in ,name
 	      :do ,(<local-check-form> b a 'funcall))))))
 
