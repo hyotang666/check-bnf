@@ -150,6 +150,15 @@
      (if fun
        `(,fun ,spec ,name)
        `(,spec ,name)))
+    ((typep spec '(cons (eql or)*))
+     `(or ,@(maplist (lambda(spec+)
+		       (if(cdr spec+)
+			 `(ignore-errors ,(<local-check-form> name var (car spec+)))
+			 `(handler-case,(<local-check-form> name var (car spec+))
+			    (syntax-error()
+			      (syntax-error "~S := ~S but not exhausted. ~S"
+					    ',name ',spec ,var)))))
+		     (cdr spec))))
     ((consp spec)
      (alexandria:with-gensyms(a b)
        `(loop :for ,a :in ',spec
