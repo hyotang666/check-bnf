@@ -58,6 +58,11 @@
       (var* keyword integer)))
 :signals check-bnf::syntax-error
 
+#?(let((var* '(:key 1 "not-key" 2)))
+    (check-bnf()
+      (var* keyword integer)))
+:signals check-bnf::syntax-error
+
 ; e.g. specify for alist.
 #?(let((var* '((:key "value")(:key2 "value2"))))
     (check-bnf()
