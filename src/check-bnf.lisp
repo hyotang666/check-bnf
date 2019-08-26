@@ -133,10 +133,10 @@
 	 (loop :for ,gsyms :on ,name
 	       :by ,(let((length(length spec+)))
 		      (case length
-			(1 ''cdr)
-			(2 ''cddr)
-			(3 ''cdddr)
-			(4 ''cddddr)
+			(1 '#'cdr)
+			(2 '#'cddr)
+			(3 '#'cdddr)
+			(4 '#'cddddr)
 			(otherwise `(lambda(list)
 				      (nthcdr ,length list)))))
 	       :do ,@forms)))))
