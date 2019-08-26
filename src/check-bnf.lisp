@@ -90,7 +90,7 @@
     `(,name(,name)
        ,(if(eql t (millet:type-expand (car spec+)))
 	  `((declare(ignore ,name)))
-	  (<check-type-form> name (car spec+))))))
+	  (<check-type-form> name name (car spec+))))))
 
 (defun <?form>(name spec+)
   (if(cdr spec+)
@@ -100,13 +100,13 @@
        ,@(if(eql t (millet:type-expand (car spec+)))
 	   `((declare(ignore(,name))))
 	   `((when ,name
-	       ,(<check-type-form> name (car spec+))))))))
+	       ,(<check-type-form> name name(car spec+))))))))
 
-(defun <check-type-form>(name type-specifier)
+(defun <check-type-form>(name var type-specifier)
   `(unless(typep ,name ',type-specifier)
      (syntax-error "~A := ~A~%but ~S is ~S"
 		   ',name ',type-specifier
-		   ,name (type-of ,name))))
+		   ,var (type-of ,var))))
 
 (defun <*form>(name spec+)
   `(,name(,name)
@@ -120,7 +120,7 @@
 	(forms
 	  (loop :for g :in gsyms
 		:for spec :in spec+
-		:for form = (<local-check-form> g spec)
+		:for form = (<local-check-form> name g spec)
 		:when form
 		:collect form))
 	)
@@ -141,11 +141,11 @@
 				      (nthcdr ,length list)))))
 	       :do ,@forms)))))
 
-(defun <local-check-form>(name spec &optional fun)
+(defun <local-check-form>(name var spec &optional fun)
   (cond
     ((millet:type-specifier-p spec)
      (unless(eql t (millet:type-expand spec))
-       (<check-type-form> name spec)))
+       (<check-type-form> name var spec)))
     ((atom spec)
      (if fun
        `(,fun ,spec ,name)
@@ -154,7 +154,7 @@
      (alexandria:with-gensyms(a b)
        `(loop :for ,a :in ',spec
 	      :for ,b :in ,name
-	      :do ,(<local-check-form> b a 'funcall))))))
+	      :do ,(<local-check-form> b b a 'funcall))))))
 
 (defun <+form>(name spec+)
   (let((*form
