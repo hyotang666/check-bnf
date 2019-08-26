@@ -217,7 +217,7 @@
 	 (<*form-body> name spec+)))
     `(,name(,name)
        (if(atom ,name)
-	 (syntax-error "~S := ~{~S~^ ~}~%but ~S"
+	 (syntax-error "~S := ~{~S~^ ~}~%Require CONS but ~S"
 		       ',name ',spec+ ,name)
 	 ,(if(typep *form '(cons (eql declare)*))
 	    nil
