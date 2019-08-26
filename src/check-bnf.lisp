@@ -90,9 +90,7 @@
     (error "BNF definition error: ~S must have + or * its name at last."
 	   name)
     `(,name(,name)
-       ,(if(eql t (millet:type-expand (car spec+)))
-	  `((declare(ignore ,name)))
-	  (<check-type-form> name name (car spec+))))))
+       ,(<local-check-form> name name (car spec+)))))
 
 (defun <?form>(name spec+)
   (if(cdr spec+)
