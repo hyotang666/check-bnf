@@ -159,8 +159,8 @@
   (let((*form
 	 (<*form-body> name spec+)))
     `(,name(,name)
-       ,(if(typep *form '(cons (eql declare)*))
-	  *form
-	  `(if(null ,name)
-	     (error "Required")
-	     ,*form)))))
+       (if(null ,name)
+	 (error "Required")
+	 ,(if(typep *form '(cons (eql declare)*))
+	    nil
+	    *form)))))
