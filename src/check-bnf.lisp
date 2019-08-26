@@ -137,7 +137,12 @@
 		:for spec :in spec+
 		:for form = (<local-check-form> name g spec)
 		:when form
-		:collect form))
+		:collect `(handler-case,form
+			    (syntax-error(c)
+			      (values ,g c))
+			    (:no-error(&rest args)
+			      (declare(ignore args))
+			      (values ,g nil)))))
 	)
     (if(null forms)
       `(declare(ignore ,name))
@@ -154,7 +159,17 @@
 			(4 '#'cddddr)
 			(otherwise `(lambda(list)
 				      (nthcdr ,length list)))))
-	       :do ,@forms)))))
+	       :do
+	       (multiple-value-call
+		 (lambda(&rest args)
+		   (loop :for (nil c) :on args :by #'cddr
+			 :when c
+			 :do (syntax-error "~S := ~{~S~^ ~}~%~
+					   but ~{~S~*~^ ~}~%~?"
+					   ',name ',spec+ args
+					   "~2*~S is ~S, not ~3:* ~S"
+					   (simple-condition-format-arguments c))))
+		 ,@forms))))))
 
 (defun <local-check-form>(name var spec &optional fun)
   (cond
