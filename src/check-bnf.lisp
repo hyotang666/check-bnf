@@ -81,14 +81,16 @@
 				     name))))))
 
 (defun <local-fun>(clause)
-  (destructuring-bind(name . spec+)clause
-    (case(char (symbol-name name)
-	       (1-(length(symbol-name name))))
-      (#\+ (<+form> name spec+))
-      (#\* (<*form> name spec+))
-      (#\? (<?form> name spec+))
-      (otherwise
-	(<require-form> name spec+)))))
+  (destructuring-bind(var-spec . spec+)clause
+    (let((name
+	   (alexandria:ensure-car var-spec)))
+      (case(char (symbol-name name)
+		 (1-(length(symbol-name name))))
+	(#\+ (<+form> name spec+))
+	(#\* (<*form> name spec+))
+	(#\? (<?form> name spec+))
+	(otherwise
+	  (<require-form> name spec+))))))
 
 (defun <require-form>(name spec+)
   (if(cdr spec+)
