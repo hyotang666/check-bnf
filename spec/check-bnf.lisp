@@ -82,11 +82,17 @@
 #?(check-bnf(:name no-such-var)) :signals error
 ; Expects macro name which CHECK-BNF checks.
 
-; clause := (var spec+)
-; var := SYMBOL, otherwise error.
+; clause := (var-spec spec+)
+; var-spec := [ name | (name name) ]
+; name := SYMBOL, otherwise error.
 #?(check-bnf()("not-symbol" dummy)) :signals error
 ; Not evaluated.
 #?(check-bnf()((intern "not evaluated") dummy)) :signals error
+
+; spec := [ type-specifier | bnf ]
+; bnf := [ name | list-bnf | or-form ]
+; list-bnf := (spec+)
+; or-form := (or spec+)
 
 ; result := NULL
 
