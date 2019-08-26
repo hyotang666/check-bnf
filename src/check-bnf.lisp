@@ -185,7 +185,8 @@
 	 (<*form-body> name spec+)))
     `(,name(,name)
        (if(atom ,name)
-	 (syntax-error "Required at least one but ~S.",name)
+	 (syntax-error "~S := ~{~S~^ ~}~%but ~S"
+		       ',name ',spec+ ,name)
 	 ,(if(typep *form '(cons (eql declare)*))
 	    nil
 	    *form)))))
