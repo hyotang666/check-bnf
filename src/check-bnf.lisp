@@ -190,10 +190,8 @@
 					    ',name ',spec ,var)))))
 		     (cdr spec))))
     ((consp spec)
-     (alexandria:with-gensyms(a b)
-       `(loop :for ,a :in ',spec
-	      :for ,b :in ,name
-	      :do ,(<local-check-form> b b a 'funcall))))))
+     `(dolist(n ,name)
+	(mapc #'local-check n ',spec)))))
 
 (defun local-check(name spec)
   (cond
