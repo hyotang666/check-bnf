@@ -84,13 +84,18 @@
   (destructuring-bind(var-spec . spec+)clause
     (let((name
 	   (alexandria:ensure-car var-spec)))
-      (case(char (symbol-name name)
-		 (1-(length(symbol-name name))))
+      (case(extended-marker name)
 	(#\+ (<+form> name spec+))
 	(#\* (<*form> name spec+))
 	(#\? (<?form> name spec+))
 	(otherwise
 	  (<require-form> name spec+))))))
+
+(defun extended-marker(name)
+  (let((char
+	 (char (symbol-name name)
+	       (1-(length(symbol-name name))))))
+    (find char "+*?")))
 
 (defun <require-form>(name spec+)
   (if(cdr spec+)
