@@ -47,6 +47,28 @@
       ((var* vars)symbol)))
 => NIL
 
+; When you know VAR is list, and it has 1 or more elt, (a.k.a. +)
+; you can write like below.
+#?(let((var+ '(1)))
+    (check-bnf()
+      (var+ integer)))
+=> NIL
+
+#?(let((var+ '()))
+    (check-bnf()
+      (var+ integer)))
+:signals check-bnf::syntax-error
+
+#?(let((var+ '("not-integer")))
+    (check-bnf()
+      (var+ integer)))
+:signals check-bnf::syntax-error
+
+#?(let((var+ :not-cons))
+    (check-bnf()
+      (var+ integer)))
+:signals check-bnf::syntax-error
+
 #+syntax
 (CHECK-BNF (&key ((:whole whole?)) ((:name name?))) &rest clause+) ; => result
 
