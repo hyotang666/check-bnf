@@ -190,8 +190,7 @@
 					    ',name ',spec ,var)))))
 		     (cdr spec))))
     ((consp spec)
-     `(dolist(n ,name)
-	(mapc #'local-check n ',spec)))))
+     `(mapc #'local-check ,var ',spec))))
 
 (defun local-check(name spec)
   (cond
