@@ -111,7 +111,7 @@
 
 (defun <check-type-form>(name var type-specifier)
   `(unless(typep ,var ',type-specifier)
-     (syntax-error "~A := ~A~%but ~S is ~S"
+     (syntax-error "~A := ~A~%but ~S, it is type-of ~S"
 		   ',name ',type-specifier
 		   ,var (type-of ,var))))
 
