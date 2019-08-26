@@ -35,6 +35,11 @@
       (var* symbol)))
 :signals check-bnf::syntax-error
 
+#?(let((var* :not-list))
+    (check-bnf()
+      (var* symbol)))
+:signals check-bnf::syntax-error
+
 ; If you do not like names var as XXX*, you can specify alias.
 #?(let((vars '(symbol)))
     (declare(ignore vars))
