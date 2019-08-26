@@ -52,13 +52,16 @@
   (labels((clause+(clause+)
 	    (if(null clause+)
 	      (syntax-error "Require at least one, but null")
-	      (loop :for (var . spec+) :in clause+
-		    :do (var var)
+	      (loop :for (var-spec . spec+) :in clause+
+		    :do (var-spec var-spec)
 		    (spec+ spec+))))
-	  (var(var)
-	    (unless(typep var 'symbol)
-	      (syntax-error "var := SYMBOL, but ~S"
-			    var)))
+	  (var-spec(var-spec)
+	    (unless(typep var-spec '(or symbol
+					(cons symbol (cons symbol null))))
+	      (syntax-error "var-spec := [ name | (name var) ]~%~
+			    name := SYMBOL~%~
+			    var := SYMBOL~%but ~S"
+			    var-spec)))
 	  (spec+(spec+)
 	    (if(null spec+)
 	      (syntax-error "Require at least one, but null"))))
@@ -71,9 +74,11 @@
 		 :collect (<local-fun> clause))
      (let((*name* ,name?)
 	  (*whole* ,whole?))
-       ,@(loop :for (name) :in clause+
+       ,@(loop :for (var-spec) :in clause+
+	       :for (name . var) := (alexandria:ensure-list var-spec)
 	       :when (eq :lexical (cltl2:variable-information name env))
-	       :collect `(,name ,name)))))
+	       :collect `(,name ,(or (car var)
+				     name))))))
 
 (defun <local-fun>(clause)
   (destructuring-bind(name . spec+)clause
