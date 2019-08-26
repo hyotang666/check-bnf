@@ -4,19 +4,18 @@
   (:export))
 (in-package :check-bnf)
 
-(define-condition syntax-error(program-error simple-error cell-error)
+(define-condition syntax-error(program-error simple-error)
   ()
   (:report (lambda(condition stream)
 	     (format stream
-		     "Syntax-error in ~S~%~?"
-		     (let((name(cell-error-name condition)))
-		       (cons name (millet:lambda-list name)))
+		     "~@[Syntax-error in ~S~%~]~?~@[~%in ~S~]"
+		     *name*
 		     (simple-condition-format-control condition)
-		     (simple-condition-format-arguments condition)))))
+		     (simple-condition-format-arguments condition)
+		     *whole*))))
 
-(defun syntax-error(name format-control &rest format-arguments)
+(defun syntax-error(format-control &rest format-arguments)
   (error 'syntax-error
-	 :name name
 	 :format-control format-control
 	 :format-arguments format-arguments))
 
@@ -44,22 +43,22 @@
   ;; THIS IS THE WHAT WE WANT TO GENERATE.
   (labels((clause+(clause+)
 	    (if(null clause+)
-	      (syntax-error 'check-bnf "Require at least one, but null")
+	      (syntax-error "Require at least one, but null")
 	      (loop :for (var . spec+) :in clause+
 		    :do (var var)
 		    (spec+ spec+))))
 	  (var(var)
 	    (unless(typep var 'symbol)
-	      (syntax-error 'check-bnf "var := SYMBOL, but ~S~%in ~S"
-			    var whole)))
+	      (syntax-error "var := SYMBOL, but ~S"
+			    var)))
 	  (spec+(spec+)
 	    (if(null spec+)
-	      (syntax-error 'check-bnf "Require at least one, but null")
+	      (syntax-error "Require at least one, but null")
 	      (unless(every (lambda(elt)
 			      (typep elt 'type-specifier))
 			    spec+)
-		(syntax-error 'check-bnf "spec := TYPE-SPECIFIER, but ~S~%in ~S"
-			      spec+ whole)))))
+		(syntax-error "spec := TYPE-SPECIFIER, but ~S"
+			      spec+)))))
     (let((*whole* whole)
 	 (*name* 'check-bnf))
       (clause+ clause+)))
