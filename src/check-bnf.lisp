@@ -83,9 +83,9 @@
       (#\* (<*form> name spec+))
       (#\? (<?form> name spec+))
       (otherwise
-	(<default-form> name spec+)))))
+	(<require-form> name spec+)))))
 
-(defun <default-form>(name spec+)
+(defun <require-form>(name spec+)
   (if(cdr spec+)
     (error "BNF definition error: ~S must have + or * its name at last."
 	   name)
