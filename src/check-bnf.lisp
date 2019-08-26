@@ -137,7 +137,8 @@
 (defun <local-check-form>(name elt &optional fun)
   (cond
     ((millet:type-specifier-p elt)
-     (<check-type-form> name elt))
+     (unless(eql t (millet:type-expand elt))
+       (<check-type-form> name elt)))
     ((atom elt)
      (if fun
        `(,fun ,elt ,name)
