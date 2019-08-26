@@ -117,7 +117,10 @@
 
 (defun <*form>(name spec+)
   `(,name(,name)
-     ,(<*form-body> name spec+)))
+     (if(typep ,name '(and atom (not null)))
+       (syntax-error "~S := ~S~%but ~S"
+		     ',name ',spec+ ,name)
+       ,(<*form-body> name spec+))))
 
 (defun <*form-body>(name spec+)
   (let*((length
@@ -176,8 +179,8 @@
   (let((*form
 	 (<*form-body> name spec+)))
     `(,name(,name)
-       (if(null ,name)
-	 (syntax-error "Required at least one but NULL.")
+       (if(atom ,name)
+	 (syntax-error "Required at least one but ~S.",name)
 	 ,(if(typep *form '(cons (eql declare)*))
 	    nil
 	    *form)))))
