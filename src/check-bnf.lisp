@@ -103,7 +103,7 @@
 	       ,(<check-type-form> name name(car spec+))))))))
 
 (defun <check-type-form>(name var type-specifier)
-  `(unless(typep ,name ',type-specifier)
+  `(unless(typep ,var ',type-specifier)
      (syntax-error "~A := ~A~%but ~S is ~S"
 		   ',name ',type-specifier
 		   ,var (type-of ,var))))
