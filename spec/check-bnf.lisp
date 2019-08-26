@@ -47,6 +47,17 @@
       ((var* vars)symbol)))
 => NIL
 
+; e.g. specify for plist.
+#?(let((var* '(:key "value" :key2 "value2")))
+    (check-bnf()
+      (var* keyword string)))
+=> NIL
+
+#?(let((var* '(:key 2 :key2 "not integer")))
+    (check-bnf()
+      (var* keyword integer)))
+:signals check-bnf::syntax-error
+
 ; When you know VAR is list, and it has 1 or more elt, (a.k.a. +)
 ; you can write like below.
 #?(let((var+ '(1)))
