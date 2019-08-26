@@ -35,6 +35,12 @@
       (var* symbol)))
 :signals check-bnf::syntax-error
 
+; If you do not like names var as XXX*, you can specify alias.
+#?(let((vars '(symbol)))
+    (check-bnf()
+      ((var* vars)symbol)))
+=> NIL
+
 #+syntax
 (CHECK-BNF (&key ((:whole whole?)) ((:name name?))) &rest clause+) ; => result
 
