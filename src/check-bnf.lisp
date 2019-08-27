@@ -229,7 +229,19 @@
 				 name spec spec+)))
 	   :else :do (ignore-errors (local-check name spec+))))
     ((consp spec)
-     (mapc #'local-check name spec))))
+     (do*((spec spec (cdr spec))
+	  (value name (cdr value)))
+       ((or (atom spec)
+	    (atom value))
+	(trivia:match*(spec value)
+	  ((nil nil))
+	  (((type atom)(type atom))
+	   (local-check value spec))
+	  ((_ _)
+	   (syntax-error "~:TLength mismatch. ~S but ~S"
+			 spec name))))
+       (local-check (car value)(car spec))))))
+
 
 (defun <+form>(name spec+)
   (let((*form

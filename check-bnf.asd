@@ -2,7 +2,7 @@
 (in-package :asdf)
 (defsystem "check-bnf"
   :version
-  "1.5.9"
+  "1.6.0"
   :depends-on
   (
    "millet" ; Wrapper for implementation dependent tiny utilities.
