@@ -197,17 +197,19 @@
 					    ',name ',spec ,var)))))
 		     (cdr spec))))
     ((consp spec)
-     (alexandria:with-gensyms(vl ve sl se)
+     (alexandria:with-gensyms(vl sl)
        `(do*((,vl ,var (cdr ,vl))
-	     (,ve (car ,vl)(car ,vl))
-	     (,sl ',spec (cdr ,sl))
-	     (,se (car ,sl)(car ,sl)))
+	     (,sl ',spec (cdr ,sl)))
 	  ((or (atom ,vl)
 	       (atom ,sl))
-	   (when (or ,vl ,sl)
-	     (syntax-error "~:TLength mismatch. ~S but ~S"
-			   ',spec ,var)))
-	  (local-check ,ve ,se))))))
+	   (trivia:match*(,vl ,sl)
+	     ((nil nil))
+	     (((type atom)(type atom))
+	      (local-check ,vl ,sl))
+	     ((_ _)
+	      (syntax-error "~:TLength mismatch. ~S but ~S"
+			    ',spec ,var))))
+	  (local-check (car ,vl)(car ,sl)))))))
 
 (defun local-check(name spec)
   (cond
