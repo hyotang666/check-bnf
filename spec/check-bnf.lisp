@@ -183,6 +183,13 @@
       (other* symbol)))
 => NIL
 
+#?(let((args '(and others)))
+    (check-bnf()
+      (args (option? other*))
+      (option? (eql option))
+      (other* symbol)))
+=> NIL
+
 ;;;; Exceptional-Situations:
 ; Every NAME should not conflicts CL symbol.
 #?(let((list nil))
