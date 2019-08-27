@@ -190,14 +190,18 @@
        `(,fun ,spec ,var)
        `(,spec ,var)))
     ((typep spec '(cons (eql or)*))
-     `(or ,@(maplist (lambda(spec+)
-		       (if(cdr spec+)
-			 `(ignore-errors ,(<local-check-form> name var (car spec+)))
-			 `(handler-case,(<local-check-form> name var (car spec+))
-			    (syntax-error()
-			      (syntax-error "~S := ~S but not exhausted. ~S"
-					    ',name ',spec ,var)))))
-		     (cdr spec))))
+     `(or ,@(mapcon (lambda(spec+)
+		      (let((form
+			     (<local-check-form> name var (car spec+))))
+			(if(cdr spec+)
+			  (when form
+			    `((ignore-errors ,form)))
+			  (when form
+			    `((handler-case,form
+				(syntax-error()
+				  (syntax-error "~S := ~S but not exhausted. ~S"
+						',name ',spec ,var))))))))
+		    (cdr spec))))
     ((consp spec)
      (alexandria:with-gensyms(vl sl elt)
        `(do*((,vl ,var (cdr ,vl))
