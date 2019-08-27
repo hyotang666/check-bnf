@@ -175,6 +175,13 @@
       (option (or null symbol))))
 :signals syntax-error
 
+#?(let((function-name "not function-name"))
+    (check-bnf()
+      (function-name (or name setf-name))
+      (name symbol)
+      (setf-name ((eql setf)name))))
+:signals syntax-error
+
 ; To check optional value in list, you can write like below.
 #?(let((args '(option and others)))
     (check-bnf()
