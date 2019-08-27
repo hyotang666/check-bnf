@@ -79,6 +79,11 @@
       (var* (keyword string))))
 :signals check-bnf::syntax-error
 
+#?(let((var* '((:key "value")(:not "ballanced" clause))))
+    (check-bnf()
+      (var* (keyword string))))
+:signals check-bnf::syntax-error
+
 ; When you know VAR is list, and it has 1 or more elt, (a.k.a. +)
 ; you can write like below.
 #?(let((var+ '(1)))
