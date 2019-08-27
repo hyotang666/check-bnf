@@ -148,8 +148,15 @@
       `(declare(ignore ,name))
       `(progn
 	 ,@(when(< 1 length)
-	     `((unless(zerop(mod (length ,name),length))
-		 (syntax-error "Length mismatch"))))
+	     `((let((mod
+		      (mod (length ,name),length)))
+		 (unless(zerop mod)
+		   (syntax-error "~:TLength mismatch. Lack last ~{~S~^ ~} of ~S~@?"
+				 (subseq ',spec+ mod)
+				 ',spec+
+				 "~%~:T~S"
+				 ,name
+				 )))))
 	 (loop :for ,gsyms :on ,name
 	       :by ,(let((length(length spec+)))
 		      (case length
