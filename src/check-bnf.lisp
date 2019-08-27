@@ -199,7 +199,17 @@
 					    ',name ',spec ,var)))))
 		     (cdr spec))))
     ((consp spec)
-     `(mapc #'local-check ,var ',spec))))
+     (alexandria:with-gensyms(vl ve sl se)
+       `(do*((,vl ,var (cdr ,vl))
+	     (,ve (car ,vl)(car ,vl))
+	     (,sl ',spec (cdr ,sl))
+	     (,se (car ,sl)(car ,sl)))
+	  ((or (atom ,vl)
+	       (atom ,sl))
+	   (when (or ,vl ,sl)
+	     (syntax-error "~:TLength mismatch. ~S but ~S"
+			   ',spec ,var)))
+	  (local-check ,ve ,se))))))
 
 (defun local-check(name spec)
   (cond
