@@ -151,6 +151,21 @@
 ; none
 
 ;;;; Notes:
+; To check optional argument (e.g. &OPTIONAL or &KEY), you can write like below.
+#?(let((option))
+    (check-bnf()
+      (option (or null symbol))))
+=> NIL
+
+#?(let((option 'symbol))
+    (check-bnf()
+      (option (or null symbol))))
+=> NIL
+
+#?(let((option "not-symbol"))
+    (check-bnf()
+      (option (or null symbol))))
+:signals check-bnf::syntax-error
 
 ;;;; Exceptional-Situations:
 ; Every NAME should not conflicts CL symbol.
