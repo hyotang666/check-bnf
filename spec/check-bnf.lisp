@@ -18,6 +18,14 @@
       (var symbol)))
 :signals check-bnf::syntax-error
 
+; You can check some place at once.
+#?(let((a 'symbol)
+       (b "string"))
+    (check-bnf()
+      (a symbol)
+      (b string)))
+=> NIL
+
 ; When you know VAR is list, and it has 0 or more elt. (a.k.a. *)
 ; You can write like below.
 #?(let((var* nil))
