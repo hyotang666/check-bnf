@@ -110,9 +110,8 @@
 	   name)
     `(,name(,name)
        ,@(if(eql t (millet:type-expand (car spec+)))
-	   `((declare(ignore(,name))))
-	   `((when ,name
-	       ,(<check-type-form> name name(car spec+))))))))
+	   `((declare(ignore(,name)))T)
+	   `((typep ,name ',(car spec+)))))))
 
 (defun <check-type-form>(name var type-specifier)
   `(unless(typep ,var ',type-specifier)
