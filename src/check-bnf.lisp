@@ -230,7 +230,7 @@
     ((atom spec)
      `#',spec)
     ((typep spec '(cons (eql or)*))
-     :TODO)
+     (error "NIY"))
     ((consp spec)
      (labels((rec(list)
 	       (typecase list
