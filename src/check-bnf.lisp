@@ -217,6 +217,10 @@
 		(push "dummy" ,vl)) ; as rewind.
 	      (local-check (car ,vl),elt))))))))
 
+(defun optional-function-p(elt)
+  (and (functionp elt)
+       (eql #\? (extended-marker(millet:function-name elt)))))
+
 (defun <spec-form>(spec)
   (cond
     ((millet:type-specifier-p spec)
