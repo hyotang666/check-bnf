@@ -43,10 +43,13 @@
        (whole (or null (expression :eval t)))
        (name (or null (expression :eval t)))
        (clause+ (var-spec spec+))
-       (var-spec (or name alias))
-       (name symbol)
-       (alias (name name))
-       (spec+ type-specifier))
+       (var-spec (or bnf-name alias))
+       (bnf-name symbol)
+       (alias (bnf-name var-name))
+       (var-name symbol)
+       (spec+ (or type-specifier bnf-name or-form))
+       (or-form ((eql or)spec+))
+       )
 
   ;; THIS IS THE WHAT WE WANT TO GENERATE.
   (labels((clause+(clause+)
