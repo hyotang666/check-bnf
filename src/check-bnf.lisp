@@ -187,8 +187,8 @@
        (<check-type-form> name var spec)))
     ((atom spec)
      (if fun
-       `(,fun ,spec ,name)
-       `(,spec ,name)))
+       `(,fun ,spec ,var)
+       `(,spec ,var)))
     ((typep spec '(cons (eql or)*))
      `(or ,@(maplist (lambda(spec+)
 		       (if(cdr spec+)
