@@ -167,6 +167,14 @@
       (option (or null symbol))))
 :signals check-bnf::syntax-error
 
+; To check optional value in list, you can write like below.
+#?(let((args '(option and others)))
+    (check-bnf()
+      (args (option? others))
+      (option? (eql option))
+      (others symbol)))
+=> NIL
+
 ;;;; Exceptional-Situations:
 ; Every NAME should not conflicts CL symbol.
 #?(let((list nil))
