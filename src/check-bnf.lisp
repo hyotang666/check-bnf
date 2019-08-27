@@ -121,7 +121,7 @@
 (defun <check-type-form>(name var type-specifier)
   `(unless(typep ,var ',type-specifier)
      (syntax-error "~A := ~A~%but ~S, it is type-of ~S"
-		   ',name ',type-specifier
+		   ',name (or-formatter ',type-specifier)
 		   ,var (type-of ,var))))
 
 (defun <*form>(name spec+)
@@ -201,8 +201,10 @@
 			  (when form
 			    `((handler-case,form
 				(syntax-error()
-				  (syntax-error "~S := ~S but not exhausted. ~S"
-						',name ',spec ,var))))))))
+				  (syntax-error "~S := ~A~%but ~S"
+						',name
+						(or-formatter ',spec)
+						,var))))))))
 		    (cdr spec))))
     ((consp spec)
      (alexandria:with-gensyms(vl sl elt)
