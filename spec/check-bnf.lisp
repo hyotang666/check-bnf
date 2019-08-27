@@ -147,6 +147,11 @@
 ;;;; Notes:
 
 ;;;; Exceptional-Situations:
+; Every NAME should not conflicts CL symbol.
+#?(let((list nil))
+    (check-bnf()
+      (list list)))
+=> unspecified
 
 (requirements-about EXPRESSION :doc-type type)
 ;;;; Description:
