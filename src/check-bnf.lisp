@@ -40,8 +40,8 @@
 			   &rest clause+)
   ;; THIS IS THE WHAT WE WANT TO WRITE.
   #++(check-bnf(:whole whole :name 'check-bnf)
-       (whole? (expression :eval t))
-       (name? (expression :eval t))
+       (whole (or null (expression :eval t)))
+       (name (or null (expression :eval t)))
        (clause+ (var-spec spec+))
        (var-spec (or name alias))
        (name symbol)
