@@ -89,6 +89,12 @@
       (var* (keyword string))))
 :signals check-bnf::syntax-error
 
+; of course dotted are valid.
+#?(let((var* '((:key . "value"))))
+    (check-bnf()
+      (var* (keyword . string))))
+=> NIL
+
 ; When you know VAR is list, and it has 1 or more elt, (a.k.a. +)
 ; you can write like below.
 #?(let((var+ '(1)))
