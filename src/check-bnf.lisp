@@ -5,6 +5,9 @@
     ;;;; Main API
     #:check-bnf
 
+    ;;;; Condition
+    #:syntax-error
+
     ;;;; Miscellaneous TYPE.
     #:expression
     ))
