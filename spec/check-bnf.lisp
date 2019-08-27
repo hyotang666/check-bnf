@@ -170,9 +170,9 @@
 ; To check optional value in list, you can write like below.
 #?(let((args '(option and others)))
     (check-bnf()
-      (args (option? others))
+      (args (option? other*))
       (option? (eql option))
-      (others symbol)))
+      (other* symbol)))
 => NIL
 
 ;;;; Exceptional-Situations:
