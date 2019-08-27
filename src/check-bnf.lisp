@@ -293,3 +293,14 @@
 	 ,(if(typep *form '(cons (eql declare)*))
 	    nil
 	    *form)))))
+
+(defun or-formatter(form)
+  (typecase form
+    (atom
+      (prin1-to-string form))
+    ((cons (eql or) *)
+     (format nil "[ ~{~A ~^| ~}]"
+	     (mapcar #'or-formatter (cdr form))))
+    (cons
+      (format nil "(~{~A~^ ~})"
+	      (mapcar #'or-formatter form)))))
