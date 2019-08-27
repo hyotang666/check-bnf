@@ -228,6 +228,7 @@
 
 (defun <spec-form>(spec)
   (cond
+    ((null spec)nil)
     ((millet:type-specifier-p spec)
      `',spec)
     ((atom spec)
@@ -235,13 +236,8 @@
     ((typep spec '(cons (eql or)*))
      (error "NIY"))
     ((consp spec)
-     (labels((rec(list)
-	       (typecase list
-		 (null nil)
-		 (atom (<spec-form> list))
-		 (cons `(cons ,(rec (car list))
-			      ,(rec (cdr list)))))))
-       (rec spec)))))
+     `(cons ,(<spec-form> (car spec))
+	    ,(<spec-form> (cdr spec))))))
 
 (defun local-check(name spec)
   (cond
