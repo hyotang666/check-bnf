@@ -196,7 +196,7 @@
 					    ',name ',spec ,var)))))
 		     (cdr spec))))
     ((consp spec)
-     (alexandria:with-gensyms(vl sl)
+     (alexandria:with-gensyms(vl sl elt)
        `(do*((,vl ,var (cdr ,vl))
 	     (,sl ',spec (cdr ,sl)))
 	  ((or (atom ,vl)
@@ -208,7 +208,13 @@
 	     ((_ _)
 	      (syntax-error "~:TLength mismatch. ~S but ~S"
 			    ',spec ,var))))
-	  (local-check (car ,vl)(car ,sl)))))))
+	  (let((,elt
+		 (car ,sl)))
+	    (if (and (symbolp ,elt)
+		     (eql #\? (extended-marker ,elt)))
+	      (unless(local-check (car ,vl),elt)
+		(push "dummy" ,vl)) ; as rewind.
+	      (local-check (car ,vl),elt))))))))
 
 (defun local-check(name spec)
   (cond
@@ -239,7 +245,13 @@
 	  ((_ _)
 	   (syntax-error "~:TLength mismatch. ~S but ~S"
 			 spec name))))
-       (local-check (car value)(car spec))))))
+       (let((elt
+	      (car spec)))
+	 (if(and (symbolp elt)
+		 (eql #\? (extended-marker elt)))
+	   (unless(local-check(car value)elt)
+	     (push "dummy" value)) ; as rewind.
+	   (local-check (car value)elt)))))))
 
 
 (defun <+form>(name spec+)
