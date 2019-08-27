@@ -211,10 +211,17 @@
 			    ',spec ,var))))
 	  (let((,elt
 		 (car ,sl)))
-	    (if (optional-function-p ,elt)
-	      (unless(local-check (car ,vl),elt)
-		(push "dummy" ,vl)) ; as rewind.
-	      (local-check (car ,vl),elt))))))))
+	    (if(functionp ,elt)
+	      (case(extended-marker(millet:function-name ,elt))
+		(#\?
+		 (unless(local-check (car ,vl),elt)
+		   (push "dummy" ,vl)))
+		((#\+ #\*)
+		 (local-check ,vl ,elt)
+		 (setf ,vl nil))
+		(otherwise
+		  (local-check (car ,vl),elt)))
+	      (local-check(car ,vl),elt))))))))
 
 (defun optional-function-p(elt)
   (and (functionp elt)
