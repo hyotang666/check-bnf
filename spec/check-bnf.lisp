@@ -16,7 +16,7 @@
 #?(let((var "string"))
     (check-bnf()
       (var symbol)))
-:signals check-bnf::syntax-error
+:signals syntax-error
 
 ; You can check some place at once.
 #?(let((a 'symbol)
@@ -41,12 +41,12 @@
 #?(let((var* '("string")))
     (check-bnf()
       (var* symbol)))
-:signals check-bnf::syntax-error
+:signals syntax-error
 
 #?(let((var* :not-list))
     (check-bnf()
       (var* symbol)))
-:signals check-bnf::syntax-error
+:signals syntax-error
 
 ; If you do not like names var as XXX*, you can specify alias.
 #?(let((vars '(symbol)))
@@ -64,17 +64,17 @@
 #?(let((var* '(:key 2 :key2 "not integer")))
     (check-bnf()
       (var* keyword integer)))
-:signals check-bnf::syntax-error
+:signals syntax-error
 
 #?(let((var* '(:key 1 "not-key" 2)))
     (check-bnf()
       (var* keyword integer)))
-:signals check-bnf::syntax-error
+:signals syntax-error
 
 #?(let((var* '(not "ballanced" plist)))
     (check-bnf()
       (var* keyword string)))
-:signals check-bnf::syntax-error
+:signals syntax-error
 
 ; e.g. specify for alist.
 #?(let((var* '((:key "value")(:key2 "value2"))))
@@ -85,17 +85,17 @@
 #?(let((var* '((:key "value")(:key2 :not-string))))
     (check-bnf()
       (var* (keyword string))))
-:signals check-bnf::syntax-error
+:signals syntax-error
 
 #?(let((var* '((:key "value")(:not "ballanced" clause))))
     (check-bnf()
       (var* (keyword string))))
-:signals check-bnf::syntax-error
+:signals syntax-error
 
 #?(let((var* '((:key "value")(:not-ballanced))))
     (check-bnf()
       (var* (keyword string))))
-:signals check-bnf::syntax-error
+:signals syntax-error
 
 ; of course dotted are valid.
 #?(let((var* '((:key . "value"))))
@@ -113,17 +113,17 @@
 #?(let((var+ '()))
     (check-bnf()
       (var+ integer)))
-:signals check-bnf::syntax-error
+:signals syntax-error
 
 #?(let((var+ '("not-integer")))
     (check-bnf()
       (var+ integer)))
-:signals check-bnf::syntax-error
+:signals syntax-error
 
 #?(let((var+ :not-cons))
     (check-bnf()
       (var+ integer)))
-:signals check-bnf::syntax-error
+:signals syntax-error
 
 #+syntax
 (CHECK-BNF (&key ((:whole whole?)) ((:name name?))) &rest clause+) ; => result
@@ -173,7 +173,7 @@
 #?(let((option "not-symbol"))
     (check-bnf()
       (option (or null symbol))))
-:signals check-bnf::syntax-error
+:signals syntax-error
 
 ; To check optional value in list, you can write like below.
 #?(let((args '(option and others)))
