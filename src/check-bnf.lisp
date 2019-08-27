@@ -198,7 +198,8 @@
     ((consp spec)
      (alexandria:with-gensyms(vl sl elt)
        `(do*((,vl ,var (cdr ,vl))
-	     (,sl ',spec (cdr ,sl)))
+	     (,sl ,(<spec-form> spec)
+		  (cdr ,sl)))
 	  ((or (atom ,vl)
 	       (atom ,sl))
 	   (trivia:match*(,vl ,sl)
@@ -215,6 +216,23 @@
 	      (unless(local-check (car ,vl),elt)
 		(push "dummy" ,vl)) ; as rewind.
 	      (local-check (car ,vl),elt))))))))
+
+(defun <spec-form>(spec)
+  (cond
+    ((millet:type-specifier-p spec)
+     `',spec)
+    ((atom spec)
+     `#',spec)
+    ((typep spec '(cons (eql or)*))
+     :TODO)
+    ((consp spec)
+     (labels((rec(list)
+	       (typecase list
+		 (null nil)
+		 (atom (<spec-form> list))
+		 (cons `(cons ,(rec (car list))
+			      ,(rec (cdr list)))))))
+       (rec spec)))))
 
 (defun local-check(name spec)
   (cond
