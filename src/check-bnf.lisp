@@ -211,8 +211,7 @@
 			    ',spec ,var))))
 	  (let((,elt
 		 (car ,sl)))
-	    (if (and (symbolp ,elt)
-		     (eql #\? (extended-marker ,elt)))
+	    (if (optional-function-p ,elt)
 	      (unless(local-check (car ,vl),elt)
 		(push "dummy" ,vl)) ; as rewind.
 	      (local-check (car ,vl),elt))))))))
