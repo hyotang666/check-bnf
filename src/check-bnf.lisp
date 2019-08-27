@@ -29,8 +29,7 @@
 	 :format-arguments format-arguments))
 
 (deftype type-specifier()t)
-(deftype expression(&key eval)
-  (declare(ignore eval))
+(deftype expression()
   t)
 
 (defvar *whole* nil)
