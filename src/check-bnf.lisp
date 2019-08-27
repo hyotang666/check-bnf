@@ -47,8 +47,8 @@
        (bnf-name symbol)
        (alias (bnf-name var-name))
        (var-name symbol)
-       (spec+ (or type-specifier bnf-name or-form))
        (or-form ((eql or)spec+))
+       (spec+ (or type-specifier bnf-name or-form spec+))
        )
 
   ;; THIS IS THE WHAT WE WANT TO GENERATE.
