@@ -195,6 +195,7 @@
 #?(check-bnf()
     (dummy+ nil))
 :signals syntax-error
+,:lazy t
 
 ; result := NULL
 
