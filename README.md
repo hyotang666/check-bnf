@@ -32,6 +32,7 @@ SBCL
 
 ### Tested with
 SBCL/1.5.5
+CCL/1.11.5
 
 ## Installation
 
