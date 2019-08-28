@@ -282,7 +282,11 @@
 	 nil
 	 `(or ,@(maplist (lambda(forms)
 			   (if(cdr forms)
-			     `(ignore-errors ,(car forms))
+			     `(handler-case ,(car forms)
+				(syntax-error()nil)
+				(:no-error(&rest args)
+				  (declare(ignore args))
+				  T))
 			     `(handler-case,(car forms)
 				(syntax-error()
 				  (syntax-error ',name "but ~S" ,var)))))
