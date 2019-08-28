@@ -383,3 +383,33 @@
 	 ,(if(typep *form '(cons (eql declare)*))
 	    nil
 	    *form)))))
+
+;;;; SPEC-INFER
+(defun t-p(thing &optional(*bnf* *bnf*))
+  (let((seen))
+    (labels((rec(thing)
+	      (let((spec
+		     (assoc thing *bnf*)))
+		(if spec
+		  (if(find (car spec)seen)
+		    nil
+		    (progn (push (car spec) seen)
+			   (every #'rec (cdr spec))))
+		  (cond
+		    ((millet:type-specifier-p thing)
+		     (if(typep thing '(cons (eql or)*))
+		       (some #'rec (cdr thing))
+		       (eq t (millet:type-expand thing))))
+		    ((typep thing '(cons (eql or) *))
+		     (some #'rec (cdr thing)))
+		    ((consp thing)
+		     (do((spec thing (cdr spec)))
+		       ((atom spec)
+			(if(null spec)
+			  T
+			  (t-p spec)))
+		       (unless(t-p(car spec))
+			 (return nil))))
+		    (t
+		      (error "NIY")))))))
+      (rec thing))))
