@@ -126,7 +126,7 @@
 :signals syntax-error
 
 #+syntax
-(CHECK-BNF (&key ((:whole whole?)) ((:name name?))) &rest clause+) ; => result
+(CHECK-BNF (&key ((:whole whole?))) &rest clause+) ; => result
 
 ;;;; Arguments and Values:
 
@@ -135,10 +135,6 @@
     (dummy dummy))
 :signals error
 ; Expects var for &WHOLE.
-
-; name := form, evaluated.
-#?(check-bnf(:name no-such-var)) :signals error
-; Expects macro name which CHECK-BNF checks.
 
 ; clause := (var-spec spec+)
 ; var-spec := [ name | (name name) ]
