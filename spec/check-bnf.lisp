@@ -26,6 +26,17 @@
       (b string)))
 => NIL
 
+; When type-specifier is expanded to T,
+; Efficient code is generated.
+#?(check-bnf()
+    (a t))
+:expanded-to
+(labels((a(a)
+	  (declare(ignore a))
+	  nil))
+  (let((check-bnf::*whole* nil)
+       (check-bnf::*bnf* '((a t))))))
+
 ; When you know VAR is list, and it has 0 or more elt. (a.k.a. *)
 ; You can write like below.
 #?(let((var* nil))
