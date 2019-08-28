@@ -311,17 +311,10 @@
 			       (cdr spec))))))
     ((consp spec)
      (if(t-p spec)
-       (alexandria:with-unique-names(vl sl)
-	 `(do*((,vl ,var (cdr ,vl))
-	       (,sl ',spec (cdr ,sl)))
-	    ((or (atom ,vl)
-		 (atom ,sl))
-	     (trivia:match*(,vl ,sl)
-	       (((type atom)(type atom)))
-	       ((_ _)
-		(syntax-error ',spec
-			      "Length mismatch. ~S but ~S"
-			      ',spec ,var))))))
+       `(unless(cons-equal ,var ',spec)
+	  (syntax-error ',spec
+			"Length mismatch. ~S but ~S"
+			',spec ,var))
        (alexandria:with-gensyms(vl sl elt)
 	 `(do*((,vl ,var (cdr ,vl))
 	       (,sl ,(<spec-form> spec)
