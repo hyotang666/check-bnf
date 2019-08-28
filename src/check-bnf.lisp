@@ -175,7 +175,7 @@
 (defun <*form>(name spec+)
   `(,name(,name)
      (if(typep ,name '(and atom (not null)))
-       (syntax-error ',name "Require LIST but ~S,." ,name)
+       (syntax-error ',name "Require LIST but ~S." ,name)
        ,(<*form-body> name spec+))))
 
 (defun <*form-body>(name spec+)
