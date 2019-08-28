@@ -51,13 +51,16 @@
     (nreverse acc)))
 
 (defun format-definition(definitions)
-  (format nil "~:{~A := ~{~A~}~@[~A~]~%~}"
+  (format nil "~:{~A := ~:[[ ~{~A~^ ~} ]~;~{~A~}~]~@[~A~]~%~}"
 	  (mapcar (lambda(definition)
 		    (multiple-value-bind(name mark)(but-extended-marker
 						     (car definition))
-		      (list name
-			    (mapcar #'or-formatter (cdr definition))
-			    mark)))
+		      (let((list
+			     (mapcar #'or-formatter (cdr definition))))
+			(list name
+			      (and list (null(cdr list))) ; one-element-p
+			      list
+			      mark))))
 		  definitions)))
 
 (defun but-extended-marker(thing)
