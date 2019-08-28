@@ -183,6 +183,16 @@
 ; list-bnf := (spec+)
 ; or-form := (or spec+)
 
+; Spec require one or more, otherwise error.
+#?(check-bnf()
+    (dummy))
+:signals syntax-error
+,:lazy t
+
+#?(check-bnf()
+    (dummy nil))
+:signals syntax-error
+
 ; result := NULL
 
 ;;;; Affected By:
