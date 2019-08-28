@@ -104,7 +104,8 @@
 	      (mapcar #'or-formatter form)))))
 
 ;;;; TYPES
-(deftype type-specifier()t)
+(deftype type-specifier()
+  t)
 (deftype expression()
   t)
 
