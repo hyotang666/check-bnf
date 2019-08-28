@@ -2,7 +2,7 @@
 (in-package :asdf)
 (defsystem "check-bnf"
   :version
-  "5.0.10"
+  "5.0.11"
   :depends-on
   (
    "millet" ; Wrapper for implementation dependent tiny utilities.
@@ -39,7 +39,8 @@
       (declare (special args))
       (call-next-method))))
 (let ((system (find-system "jingoh.documentizer" nil)))
-  (when system
+  (when (and system
+             (uiop:featurep :clisp))
     (load-system system)
     (defmethod operate :around
                ((o load-op) (c (eql (find-system "check-bnf"))) &key)
