@@ -32,6 +32,15 @@
 		     (simple-condition-format-arguments condition)
 		     (whole-form<=syntax-error condition)))))
 
+;;;; SIGNALER
+(defun syntax-error(name format-control &rest format-arguments)
+  (error 'syntax-error
+	 :name name
+	 :format-control format-control
+	 :format-arguments format-arguments
+	 :whole *whole*
+	 :definitions *bnf*))
+
 ;;;; FORMATTER
 (defun definitions(thing bnf)
   (let((acc))
@@ -79,14 +88,16 @@
 	     (values (symbol-name thing)
 		     nil))))))
 
-;;;; SIGNALER
-(defun syntax-error(name format-control &rest format-arguments)
-  (error 'syntax-error
-	 :name name
-	 :format-control format-control
-	 :format-arguments format-arguments
-	 :whole *whole*
-	 :definitions *bnf*))
+(defun or-formatter(form)
+  (typecase form
+    (atom
+      (prin1-to-string form))
+    ((cons (eql or) *)
+     (format nil "[ ~{~A ~^| ~}]"
+	     (mapcar #'or-formatter (cdr form))))
+    (cons
+      (format nil "(~{~A~^ ~})"
+	      (mapcar #'or-formatter form)))))
 
 (deftype type-specifier()t)
 (deftype expression()
@@ -349,14 +360,3 @@
 	 ,(if(typep *form '(cons (eql declare)*))
 	    nil
 	    *form)))))
-
-(defun or-formatter(form)
-  (typecase form
-    (atom
-      (prin1-to-string form))
-    ((cons (eql or) *)
-     (format nil "[ ~{~A ~^| ~}]"
-	     (mapcar #'or-formatter (cdr form))))
-    (cons
-      (format nil "(~{~A~^ ~})"
-	      (mapcar #'or-formatter form)))))
