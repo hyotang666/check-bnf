@@ -115,6 +115,29 @@
 (deftype expression()
   t)
 
+;;;; UTILITY
+(defun cons-equal(list1 list2)
+  (trivia:match*(list1 list2)
+    ((nil nil)
+     T)
+    (((type atom)(type atom))
+     T)
+    (((type atom)_)
+     NIL)
+    ((_ (type atom))
+     NIL)
+    ((_ _)
+     (trivia:match*((car list1)(car list2))
+       (((type atom)(type atom))
+	(cons-equal(cdr list1)(cdr list2)))
+       (((type atom)_)
+	NIL)
+       ((_ (type atom))
+	NIL)
+       ((_ _)
+	(and (cons-equal(car list1)(car list2))
+	     (cons-equal(cdr list1)(cdr list2))))))))
+
 ;;;; CHECK-BNF
 (defmacro check-bnf(&whole whole
 			   &environment env
