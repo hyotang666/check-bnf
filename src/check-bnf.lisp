@@ -99,13 +99,16 @@
       (format nil "(~{~A~^ ~})"
 	      (mapcar #'or-formatter form)))))
 
+;;;; TYPES
 (deftype type-specifier()t)
 (deftype expression()
   t)
 
+;;;; SPECIAL VARIABLES
 (defvar *whole* nil)
 (defvar *bnf* nil)
 
+;;;; CHECK-BNF
 (defmacro check-bnf(&whole whole
 			   &environment env
 			   (&key ((:whole whole?)))
