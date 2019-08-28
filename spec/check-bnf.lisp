@@ -133,7 +133,10 @@
 ; whole := form, evaluated.
 #?(check-bnf(:whole no-such-var)
     (dummy dummy))
-:signals error
+:signals (or error
+	     warning ; for ccl
+	     )
+
 ; Expects var for &WHOLE.
 ; When specified, header and footer is generated in error message.
 #?(let((a "not-symbol"))
