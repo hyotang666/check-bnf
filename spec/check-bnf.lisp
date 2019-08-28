@@ -37,6 +37,49 @@
   (let((check-bnf::*whole* nil)
        (check-bnf::*bnf* '((a t))))))
 
+; Also it occur in OR form.
+#?(check-bnf()
+    (a (or symbol t string)))
+:expanded-to
+(labels((a(a)
+	  (declare(ignore a))
+	  nil))
+  (let((check-bnf::*whole* nil)
+       (check-bnf::*bnf* '((a (or symbol t string)))))))
+
+#?(check-bnf()
+    (a (or symbol b string))
+    (b t))
+:expanded-to
+(labels((a(a)
+	  (declare(ignore a))
+	  nil)
+	(b(b)
+	  (declare(ignore b))
+	  nil))
+  (let((check-bnf::*whole* nil)
+       (check-bnf::*bnf* '((a (or symbol t string))
+			   (b t))))))
+
+#?(check-bnf()
+    (a (or b c))
+    (b integer)
+    (c t))
+:expanded-to
+(labels((a(a)
+	  (declare(ignore a))
+	  nil)
+	(b(b)
+	  (unless(typep b 'integer)
+	    (syntax-error 'b "but ~S, it is type-of ~S"
+			  b (type-of b))))
+	(c(c)
+	  (declare(ignore c))
+	  nil))
+  (let((check-bnf::*whole* nil)
+       (check-bnf::*bnf* '((a (or symbol t string))
+			   (b t))))))
+
 ; When you know VAR is list, and it has 0 or more elt. (a.k.a. *)
 ; You can write like below.
 #?(let((var* nil))
