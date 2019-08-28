@@ -94,8 +94,7 @@
 
 (defmacro check-bnf(&whole whole
 			   &environment env
-			   (&key ((:whole whole?))
-				 ((:name name?)))
+			   (&key ((:whole whole?)))
 			   &rest clause+)
   ;; THIS IS THE WHAT WE WANT TO WRITE.
   #++(check-bnf(:whole whole :name 'check-bnf)
