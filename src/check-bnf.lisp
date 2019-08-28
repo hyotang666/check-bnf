@@ -326,6 +326,8 @@
 	       ((nil nil))
 	       (((type atom)(type atom))
 		(local-check ,vl ,sl))
+	       ((nil (list spec))
+		(local-check ,vl spec))
 	       ((_ _)
 		(syntax-error ',spec
 			      "Length mismatch. ~S but ~S"
