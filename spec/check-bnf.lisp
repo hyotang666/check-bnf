@@ -162,9 +162,21 @@
 ; clause := (var-spec spec+)
 ; var-spec := [ name | (name name) ]
 ; name := SYMBOL, otherwise error.
-#?(check-bnf()("not-symbol" dummy)) :signals error
+#?(check-bnf()
+    ("not-symbol" dummy))
+:signals syntax-error
+,:lazy t
+
 ; Not evaluated.
-#?(check-bnf()((intern "not evaluated") dummy)) :signals error
+#?(check-bnf()
+    ((intern "not evaluated") dummy))
+:signals syntax-error
+,:lazy t
+
+; Clause require one or more, otherwise syntax error.
+#?(check-bnf())
+:signals syntax-error
+,:lazy t
 
 ; spec := [ type-specifier | bnf ]
 ; bnf := [ name | list-bnf | or-form ]
