@@ -131,7 +131,9 @@
 ;;;; Arguments and Values:
 
 ; whole := form, evaluated.
-#?(check-bnf(:whole no-such-var)) :signals error
+#?(check-bnf(:whole no-such-var)
+    (dummy dummy))
+:signals error
 ; Expects var for &WHOLE.
 
 ; name := form, evaluated.
