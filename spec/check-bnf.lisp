@@ -190,7 +190,7 @@
 ,:lazy t
 
 #?(check-bnf()
-    (dummy nil))
+    (dummy+ nil))
 :signals syntax-error
 
 ; result := NULL

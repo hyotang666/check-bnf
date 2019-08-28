@@ -254,8 +254,13 @@
 (defun <local-check-form>(name var spec &optional fun)
   (cond
     ((millet:type-specifier-p spec)
-     (unless(eql t (millet:type-expand spec))
-       (<check-type-form> name var spec)))
+     (cond
+       ((eql t (millet:type-expand spec))
+	nil)
+       ((eql nil (millet:type-expand spec))
+	(syntax-error 'check-bnf "NIL is invalid.~%HINT: NULL?"))
+       (t
+	 (<check-type-form> name var spec))))
     ((atom spec)
      (if fun
        `(,fun ,spec ,var)
