@@ -103,6 +103,12 @@
       (format nil "(~{~A~^ ~})"
 	      (mapcar #'or-formatter form)))))
 
+(defun extended-marker(name)
+  (let((char
+	 (char (symbol-name name)
+	       (1-(length(symbol-name name))))))
+    (find char "+*?")))
+
 ;;;; TYPES
 (deftype type-specifier()
   t)
@@ -165,12 +171,6 @@
 	(#\? (<?form> name spec+))
 	(otherwise
 	  (<require-form> name spec+))))))
-
-(defun extended-marker(name)
-  (let((char
-	 (char (symbol-name name)
-	       (1-(length(symbol-name name))))))
-    (find char "+*?")))
 
 (defun <require-form>(name spec+)
   (if(cdr spec+)
