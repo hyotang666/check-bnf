@@ -13,6 +13,7 @@
     ))
 (in-package :check-bnf)
 
+;;;; CONDITION
 (define-condition syntax-error(program-error simple-error cell-error)
   ((whole :initform nil
 	  :initarg :whole
@@ -31,6 +32,7 @@
 		     (simple-condition-format-arguments condition)
 		     (whole-form<=syntax-error condition)))))
 
+;;;; FORMATTER
 (defun definitions(thing bnf)
   (let((acc))
     (labels((rec(thing)
@@ -77,6 +79,7 @@
 	     (values (symbol-name thing)
 		     nil))))))
 
+;;;; SIGNALER
 (defun syntax-error(name format-control &rest format-arguments)
   (error 'syntax-error
 	 :name name
