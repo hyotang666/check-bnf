@@ -13,6 +13,10 @@
     ))
 (in-package :check-bnf)
 
+;;;; SPECIAL VARIABLES
+(defvar *whole* nil)
+(defvar *bnf* nil)
+
 ;;;; CONDITION
 (define-condition syntax-error(program-error simple-error cell-error)
   ((whole :initform nil
@@ -103,10 +107,6 @@
 (deftype type-specifier()t)
 (deftype expression()
   t)
-
-;;;; SPECIAL VARIABLES
-(defvar *whole* nil)
-(defvar *bnf* nil)
 
 ;;;; CHECK-BNF
 (defmacro check-bnf(&whole whole
