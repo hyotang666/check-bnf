@@ -313,6 +313,25 @@
       (list list)))
 => unspecified
 
+;;;; Example.
+#?(let((var '(symbol symbol)))
+    (check-bnf()
+      (var (symbol symbol option*))
+      (option* keyword string)))
+=> NIL
+
+#?(let((var '(symbol symbol)))
+    (check-bnf()
+      (var (symbol symbol option?))
+      (option? keyword)))
+=> NIL
+
+#?(let((var '(symbol symbol)))
+    (check-bnf()
+      (var (symbol symbol required))
+      (required keyword)))
+:signals syntax-error
+
 (requirements-about EXPRESSION :doc-type type)
 ;;;; Description:
 ;;;; Compound Type Specifier Kind:
