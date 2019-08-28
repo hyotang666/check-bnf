@@ -264,6 +264,9 @@
 	nil)
        ((eql nil (millet:type-expand spec))
 	(syntax-error 'check-bnf "NIL is invalid.~%HINT: NULL?"))
+       ((and (typep spec '(cons (eql or) *))
+	     (find t (cdr spec) :key #'millet:type-expand))
+	nil)
        (t
 	 (<check-type-form> name var spec))))
     ((atom spec)
@@ -271,17 +274,19 @@
        `(,fun ,spec ,var)
        `(,spec ,var)))
     ((typep spec '(cons (eql or)*))
-     `(or ,@(mapcon (lambda(spec+)
-		      (let((form
-			     (<local-check-form> name var (car spec+))))
-			(if(cdr spec+)
-			  (when form
-			    `((ignore-errors ,form)))
-			  (when form
-			    `((handler-case,form
-				(syntax-error()
-				  (syntax-error ',name "but ~S" ,var))))))))
+     (let((forms
+	    (mapcar (lambda(spec)
+		      (<local-check-form> name var spec))
 		    (cdr spec))))
+       (if(member nil forms)
+	 nil
+	 `(or ,@(maplist (lambda(forms)
+			   (if(cdr forms)
+			     `(ignore-errors ,(car forms))
+			     `(handler-case,(car forms)
+				(syntax-error()
+				  (syntax-error ',name "but ~S" ,var)))))
+			 forms)))))
     ((consp spec)
      (alexandria:with-gensyms(vl sl elt)
        `(do*((,vl ,var (cdr ,vl))
