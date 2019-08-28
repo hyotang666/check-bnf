@@ -176,8 +176,13 @@
   (if(cdr spec+)
     (error "BNF definition error: ~S must have + or * its name at last."
 	   name)
-    `(,name(,name)
-       ,(<local-check-form> name name (car spec+)))))
+    (let((form
+	   (<local-check-form> name name (car spec+))))
+      `(,name(,name)
+	 ,@(if form
+	     (list form)
+	     `((declare(ignore ,name))
+	       NIL))))))
 
 (defun <?form>(name spec+)
   (if(cdr spec+)
