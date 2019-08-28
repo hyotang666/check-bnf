@@ -13,21 +13,29 @@
     ))
 (in-package :check-bnf)
 
-(define-condition syntax-error(program-error simple-error)
-  ()
+(define-condition syntax-error(program-error simple-error cell-error)
+  ((whole :initform nil
+	  :initarg :whole
+	  :reader whole-form<=syntax-error)
+   (definitions :initform nil
+		:initarg :definitions
+		:reader bnf-definitions))
   (:report (lambda(condition stream)
 	     (format stream
-		     "~@[Syntax-error in ~S~%~]~?~@[~%in ~S~]"
-		     *name*
+		     "~@[Syntax-error in ~S~%~]~A~?~@[~%in ~S~]"
+		     (car(whole-form<=syntax-error condition))
+		     (format-definition
+		       (definitions (cell-error-name condition)
+				    (bnf-definitions condition)))
 		     (simple-condition-format-control condition)
 		     (simple-condition-format-arguments condition)
-		     *whole*))))
+		     (whole-form<=syntax-error condition)))))
 
-(defun definitions(thing)
+(defun definitions(thing bnf)
   (let((acc))
     (labels((rec(thing)
 	      (let((definition
-		     (assoc thing *bnf*)))
+		     (assoc thing bnf)))
 		(if definition
 		  (progn (pushnew definition acc :key #'car)
 			 (body (cdr definition)))
@@ -66,17 +74,19 @@
 	     (values (symbol-name thing)
 		     nil))))))
 
-(defun syntax-error(format-control &rest format-arguments)
+(defun syntax-error(name format-control &rest format-arguments)
   (error 'syntax-error
+	 :name name
 	 :format-control format-control
-	 :format-arguments format-arguments))
+	 :format-arguments format-arguments
+	 :whole *whole*
+	 :definitions *bnf*))
 
 (deftype type-specifier()t)
 (deftype expression()
   t)
 
 (defvar *whole* nil)
-(defvar *name* nil)
 (defvar *bnf* nil)
 
 (defmacro check-bnf(&whole whole
@@ -100,29 +110,25 @@
   ;; THIS IS THE WHAT WE WANT TO GENERATE.
   (labels((clause+(clause+)
 	    (if(null clause+)
-	      (syntax-error "Require at least one, but null")
+	      (syntax-error 'clause+ "Require at least one, but null")
 	      (loop :for (var-spec . spec+) :in clause+
 		    :do (var-spec var-spec)
 		    (spec+ spec+))))
 	  (var-spec(var-spec)
 	    (unless(typep var-spec '(or symbol
 					(cons symbol (cons symbol null))))
-	      (syntax-error "var-spec := [ name | (name var) ]~%~
-			    name := SYMBOL~%~
-			    var := SYMBOL~%but ~S"
-			    var-spec)))
+	      (syntax-error 'var-spec "but ~S" var-spec)))
 	  (spec+(spec+)
 	    (if(null spec+)
-	      (syntax-error "Require at least one, but null"))))
-    (let((*whole* whole)
-	 (*name* 'check-bnf))
+	      (syntax-error 'spec+ "Require at least one, but null"))))
+    (let((*whole* whole))
       (clause+ clause+)))
 
   ;; Body of CHECK-BNF.
   `(labels,(loop :for clause :in clause+
 		 :collect (<local-fun> clause))
-     (let((*name* ,name?)
-	  (*whole* ,whole?))
+     (let((*whole* ,whole?)
+	  (*bnf* ',clause+))
        ,@(loop :for (var-spec) :in clause+
 	       :for (name . var) := (alexandria:ensure-list var-spec)
 	       :when (eq :lexical (cltl2:variable-information name env))
@@ -164,15 +170,12 @@
 
 (defun <check-type-form>(name var type-specifier)
   `(unless(typep ,var ',type-specifier)
-     (syntax-error "~A := ~A~%but ~S, it is type-of ~S"
-		   ',name (or-formatter ',type-specifier)
-		   ,var (type-of ,var))))
+     (syntax-error ',name "but ~S, it is type-of ~S" ,var (type-of ,var))))
 
 (defun <*form>(name spec+)
   `(,name(,name)
      (if(typep ,name '(and atom (not null)))
-       (syntax-error "~S := ~{~S~^ ~}~%Require LIST but ~S,."
-		     ',name ',spec+ ,name)
+       (syntax-error ',name "Require LIST but ~S,." ,name)
        ,(<*form-body> name spec+))))
 
 (defun <*form-body>(name spec+)
@@ -199,7 +202,8 @@
 	     `((let((mod
 		      (mod (length ,name),length)))
 		 (unless(zerop mod)
-		   (syntax-error "~:TLength mismatch. Lack last ~{~S~^ ~} of ~S~@?"
+		   (syntax-error ',name
+				 "~:TLength mismatch. Lack last ~{~S~^ ~} of ~S~@?"
 				 (subseq ',spec+ mod)
 				 ',spec+
 				 "~%~:T~S"
@@ -220,8 +224,9 @@
 		   (loop :for (nil c) :on args :by #'cddr
 			 :when c
 			 :do (syntax-error
-			       "~:T~S := ~{~S~^ ~}~%~:Tbut ~{~S~*~^ ~}~@?"
-			       ',name ',spec+ args
+			       ',name
+			       "~:Tbut ~{~S~*~^ ~}~@?"
+			       args
 			       "~%~:Tin ~S"
 			       ,name)))
 		 ,@forms))))))
@@ -245,10 +250,7 @@
 			  (when form
 			    `((handler-case,form
 				(syntax-error()
-				  (syntax-error "~S := ~A~%but ~S"
-						',name
-						(or-formatter ',spec)
-						,var))))))))
+				  (syntax-error ',name "but ~S" ,var))))))))
 		    (cdr spec))))
     ((consp spec)
      (alexandria:with-gensyms(vl sl elt)
@@ -262,7 +264,8 @@
 	     (((type atom)(type atom))
 	      (local-check ,vl ,sl))
 	     ((_ _)
-	      (syntax-error "~:TLength mismatch. ~S but ~S"
+	      (syntax-error ',spec
+			    "~:TLength mismatch. ~S but ~S"
 			    ',spec ,var))))
 	  (let((,elt
 		 (car ,sl)))
@@ -296,8 +299,9 @@
     ((millet:type-specifier-p spec)
      (unless(eql t (millet:type-expand spec))
        (unless(typep name spec)
-	 (syntax-error "~A := ~A~%but ~S, it is type-of ~S"
-		       name spec name (type-of name)))))
+	 (syntax-error name
+		       "but ~S, it is type-of ~S"
+		       name (type-of name)))))
     ((atom spec)
      (funcall spec name))
     ((typep spec '(cons (eql or)*))
@@ -305,7 +309,8 @@
 	   :if (null rest)
 	   :do (handler-case(local-check name spec+)
 		 (syntax-error()
-		   (syntax-error "~S := ~S but not exhausted. ~S"
+		   (syntax-error name
+				 "~S := ~S but not exhausted. ~S"
 				 name spec spec+)))
 	   :else :do (ignore-errors (local-check name spec+))))
     ((consp spec)
@@ -318,7 +323,8 @@
 	  (((type atom)(type atom))
 	   (local-check value spec))
 	  ((_ _)
-	   (syntax-error "~:TLength mismatch. ~S but ~S"
+	   (syntax-error spec
+			 "~:TLength mismatch. ~S but ~S"
 			 spec name))))
        (let((elt
 	      (car spec)))
@@ -334,8 +340,7 @@
 	 (<*form-body> name spec+)))
     `(,name(,name)
        (if(atom ,name)
-	 (syntax-error "~S := ~{~S~^ ~}~%Require CONS but ~S"
-		       ',name ',spec+ ,name)
+	 (syntax-error ',name "Require CONS but ~S" ,name)
 	 ,(if(typep *form '(cons (eql declare)*))
 	    nil
 	    *form)))))
