@@ -23,6 +23,49 @@
 		     (simple-condition-format-arguments condition)
 		     *whole*))))
 
+(defun definitions(thing)
+  (let((acc))
+    (labels((rec(thing)
+	      (let((definition
+		     (assoc thing *bnf*)))
+		(if definition
+		  (progn (pushnew definition acc :key #'car)
+			 (body (cdr definition)))
+		  (typecase thing
+		    (cons
+		      (body thing))))))
+	    (body(list)
+	      (dolist(spec list)
+		(when(and (not(eq spec thing))
+			  (not(assoc spec acc)))
+		  (rec spec)))))
+      (rec thing))
+    (nreverse acc)))
+
+(defun format-definition(definitions)
+  (format nil "~:{~A := ~{~A~}~@[~A~]~%~}"
+	  (mapcar (lambda(definition)
+		    (multiple-value-bind(name mark)(but-extended-marker
+						     (car definition))
+		      (list name
+			    (mapcar #'or-formatter (cdr definition))
+			    mark)))
+		  definitions)))
+
+(defun but-extended-marker(thing)
+  (and (symbolp thing)
+       (let((mark
+	      (extended-marker thing)))
+	 (case mark
+	   ((#\? #\* #\+)
+	    (let((name
+		   (symbol-name thing)))
+	      (values (subseq name 0 (1- (length name)))
+		      mark)))
+	   (otherwise
+	     (values (symbol-name thing)
+		     nil))))))
+
 (defun syntax-error(format-control &rest format-arguments)
   (error 'syntax-error
 	 :format-control format-control
@@ -34,6 +77,7 @@
 
 (defvar *whole* nil)
 (defvar *name* nil)
+(defvar *bnf* nil)
 
 (defmacro check-bnf(&whole whole
 			   &environment env
