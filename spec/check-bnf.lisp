@@ -58,7 +58,7 @@
 	  (declare(ignore b))
 	  nil))
   (let((check-bnf::*whole* nil)
-       (check-bnf::*bnf* '((a (or symbol t string))
+       (check-bnf::*bnf* '((a (or symbol b string))
 			   (b t))))))
 
 #?(check-bnf()
@@ -77,8 +77,9 @@
 	  (declare(ignore c))
 	  nil))
   (let((check-bnf::*whole* nil)
-       (check-bnf::*bnf* '((a (or symbol t string))
-			   (b t))))))
+       (check-bnf::*bnf* '((a (or b c))
+			   (b integer)
+			   (c t))))))
 
 ; When you know VAR is list, and it has 0 or more elt. (a.k.a. *)
 ; You can write like below.
