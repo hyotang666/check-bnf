@@ -206,10 +206,10 @@
 		      (mod (length ,name),length)))
 		 (unless(zerop mod)
 		   (syntax-error ',name
-				 "~:TLength mismatch. Lack last ~{~S~^ ~} of ~S~@?"
+				 "Length mismatch. Lack last ~{~S~^ ~} of ~S~@?"
 				 (subseq ',spec+ mod)
 				 ',spec+
-				 "~%~:T~S"
+				 "~%~S"
 				 ,name
 				 )))))
 	 (loop :for ,gsyms :on ,name
@@ -228,9 +228,9 @@
 			 :when c
 			 :do (syntax-error
 			       ',name
-			       "~:Tbut ~{~S~*~^ ~}~@?"
+			       "but ~{~S~*~^ ~}~@?"
 			       args
-			       "~%~:Tin ~S"
+			       "~%in ~S"
 			       ,name)))
 		 ,@forms))))))
 
@@ -268,7 +268,7 @@
 	      (local-check ,vl ,sl))
 	     ((_ _)
 	      (syntax-error ',spec
-			    "~:TLength mismatch. ~S but ~S"
+			    "Length mismatch. ~S but ~S"
 			    ',spec ,var))))
 	  (let((,elt
 		 (car ,sl)))
@@ -327,7 +327,7 @@
 	   (local-check value spec))
 	  ((_ _)
 	   (syntax-error spec
-			 "~:TLength mismatch. ~S but ~S"
+			 "Length mismatch. ~S but ~S"
 			 spec name))))
        (let((elt
 	      (car spec)))
