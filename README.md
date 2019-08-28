@@ -34,5 +34,8 @@ SBCL
 SBCL/1.5.5
 CCL/1.11.5
 
+### Test fails with
+CLISP due to TRIVIA fails to load.
+
 ## Installation
 
