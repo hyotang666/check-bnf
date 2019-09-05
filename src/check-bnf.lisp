@@ -67,18 +67,24 @@
     (nreverse acc)))
 
 (defun format-definition(definitions)
-  (format nil "~:{~A := ~:[[ ~{~A~^ ~} ]~;~{~A~}~]~@[~A~]~%~}"
-	  (mapcar (lambda(definition)
-		    (multiple-value-bind(name mark)(but-extended-marker
-						     (car definition))
-		      (let((list
-			     (mapcar #'or-formatter (cdr definition))))
-			(list name
-			      (and list (null(cdr list))) ; one-element-p
-			      list
-			      mark))))
-		  (if(typep definitions '(cons (eql check-bnf)*))
-		    (cddr definitions)
+  (when(typep definitions '(cons (eql check-bnf)*))
+    (setf definitions (mapcar (lambda(def)
+				(cons (alexandria:ensure-car (car def))
+				      (cdr def)))
+			      (cddr definitions))))
+  (format nil "~:{~VA := ~:[[ ~{~A~^ ~} ]~;~{~A~}~]~@[~A~]~%~}"
+	  (let((num (reduce #'max definitions
+			    :key (alexandria:compose #'length #'string #'car))))
+	    (mapcar (lambda(definition)
+		      (multiple-value-bind(name mark)(but-extended-marker
+						       (car definition))
+			(let((list
+			       (mapcar #'or-formatter (cdr definition))))
+			  (list num
+				name
+				(and list (null(cdr list))) ; one-element-p
+				list
+				mark))))
 		    definitions))))
 
 (declaim (ftype (function (T)
