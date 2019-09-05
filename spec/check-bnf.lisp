@@ -373,6 +373,31 @@
       (name symbol)))
 :signals syntax-error
 
+;; Right side XXX?
+#?(let((ll nil))
+    (check-bnf()
+      (ll (var?))
+      (var symbol)))
+=> NIL
+
+#?(let((ll '(var)))
+    (check-bnf()
+      (ll (var?))
+      (var symbol)))
+=> NIL
+
+#?(let((ll '(var too much)))
+    (check-bnf()
+      (ll (var?))
+      (var symbol)))
+:signals syntax-error
+
+#?(let((ll "not symbol"))
+    (check-bnf()
+      (ll (var?))
+      (var symbol)))
+:signals syntax-error
+
 (requirements-about EXPRESSION :doc-type type)
 ;;;; Description:
 ;;;; Compound Type Specifier Kind:
