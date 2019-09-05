@@ -18,7 +18,25 @@ It allows you to write macro arguments definition.
 It helps the third person to understand your macro.
 
 ## Usage
-See spec/check-bnf.lisp
+
+```lisp
+(defmacro defun (&whole whole name lambda-list &body body)
+  (check-bnf(:whole whole)
+    (name (or symbol setf-name))
+    (setf-name ((eql setf) name))
+    (lambda-list list))
+  (list* name lambda-list body))
+
+(defun "name" () :dummy)
+;; SYNTAX-ERROR
+  Syntax-error in DEFUN
+NAME      := [ SYMBOL | SETF-NAME ]
+SETF-NAME := ((EQL SETF) NAME)
+but "name"
+in (DEFUN "name" NIL :DUMMY)
+```
+
+For detail, see spec/check-bnf.lisp
 
 ## From developer
 
