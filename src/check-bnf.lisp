@@ -161,11 +161,14 @@
       (clause+ clause+)))
 
   ;; Body of CHECK-BNF.
-  (let((*bnf* clause+))
+  (let((*bnf* (mapcar (lambda(clause)
+			(cons (alexandria:ensure-car clause)
+			      (cdr clause)))
+		      clause+)))
     `(labels,(loop :for clause :in clause+
 		   :collect (<local-fun> clause))
        (let((*whole* ,whole?)
-	    (*bnf* ',clause+))
+	    (*bnf* ',*bnf*))
 	 ,@(loop :for (var-spec) :in clause+
 		 :for (name . var) := (alexandria:ensure-list var-spec)
 		 :when (eq :lexical (cltl2:variable-information name env))
