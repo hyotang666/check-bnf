@@ -281,7 +281,8 @@
      (multiple-value-bind(but mark)(but-extended-marker spec)
        (case mark
 	 ((#\+ #\*)
-	  `(funcall (,(find-symbol (format nil "~C-CHECKER" mark))
+	  `(funcall (,(find-symbol (format nil "~C-CHECKER" mark)
+				   :check-bnf)
 		      ',name #',but) ,var))
 	 (otherwise `(,spec ,var)))))
     ((typep spec '(cons (eql or)*))
