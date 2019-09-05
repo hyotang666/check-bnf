@@ -113,6 +113,12 @@
       (var* symbol)))
 :signals syntax-error
 
+; When expected T, efficient code is generated.
+#?(let((option* ()))
+    (check-bnf:check-bnf()
+      (option* keyword T)))
+=> NIL
+
 ; If you do not like names var as XXX*, you can specify alias.
 #?(let((vars '(symbol)))
     (declare(ignore vars))
