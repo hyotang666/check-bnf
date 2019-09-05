@@ -342,6 +342,7 @@
       (required keyword)))
 :signals syntax-error
 
+;; Right side XXX*
 #?(let((var '(symbol)))
     (check-bnf()
       (var (or string name*))
@@ -353,6 +354,24 @@
       (var (or string name*))
       (name symbol)))
 => NIL
+
+#?(let((var ()))
+    (check-bnf()
+      (var (or string name*))
+      (name symbol)))
+=> NIL
+
+#?(let((var :not-list))
+    (check-bnf()
+      (var (or string name*))
+      (name symbol)))
+:signals syntax-error
+
+#?(let((var '("string" "list")))
+    (check-bnf()
+      (var (or string name*))
+      (name symbol)))
+:signals syntax-error
 
 (requirements-about EXPRESSION :doc-type type)
 ;;;; Description:
