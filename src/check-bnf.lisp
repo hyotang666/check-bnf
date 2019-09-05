@@ -278,7 +278,12 @@
        (t
 	 (<check-type-form> name var spec))))
     ((atom spec)
-     `(,spec ,var))
+     (multiple-value-bind(but mark)(but-extended-marker spec)
+       (case mark
+	 ((#\+ #\*)
+	  `(funcall (,(find-symbol (format nil "~C-CHECKER" mark))
+		      ',name #',but) ,var))
+	 (otherwise `(,spec ,var)))))
     ((typep spec '(cons (eql or)*))
      (if(t-p spec)
        nil
