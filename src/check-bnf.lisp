@@ -270,70 +270,83 @@
 (defun <local-check-form>(name var spec)
   (cond
     ((millet:type-specifier-p spec)
-     (cond
-       ((t-p spec)
-	nil)
-       ((eql nil (millet:type-expand spec))
-	(syntax-error 'check-bnf "NIL is invalid.~%HINT: NULL?"))
-       (t
-	 (<check-type-form> name var spec))))
+     (<local-type-check-form> name var spec))
     ((atom spec)
-     (multiple-value-bind(but mark)(but-extended-marker spec)
-       (case mark
-	 ((#\+ #\*)
-	  `(funcall (,(find-symbol (format nil "~C-CHECKER" mark)
-				   :check-bnf)
-		      ',name #',but) ,var))
-	 (otherwise `(,spec ,var)))))
+     (<local-atom-check-form> name var spec))
     ((typep spec '(cons (eql or)*))
-     (if(t-p spec)
-       nil
-       `(tagbody ,@(maplist (lambda(forms)
-			      `(handler-case ,(car forms)
-				 (syntax-error()
-				   ,(if(cdr forms)
-				      nil
-				      `(syntax-error ',name "but ~S" ,var)))
-				 (:no-error(&rest args)
-				   (declare(ignore args)))))
-			    (mapcar (lambda(spec)
-				      (<local-check-form> name var spec))
-				    (cdr spec))))))
+     (<local-or-check-form> name var spec))
     ((consp spec)
-     (if(t-p spec)
-       `(unless(cons-equal ,var ',spec)
-	  (syntax-error ',spec
-			"Length mismatch. ~S but ~S"
-			',spec ,var))
-       (alexandria:with-gensyms(vl sl elt)
-	 `(do*((,vl ,var (cdr ,vl))
-	       (,sl ,(<spec-form> spec name)
-		    (cdr ,sl)))
-	    ((or (atom ,vl)
-		 (atom ,sl))
-	     (trivia:match*(,vl ,sl)
-	       ((nil nil))
-	       (((type atom)(type atom))
-		(local-check ,vl ,sl))
-	       ((nil (list spec))
-		(local-check ,vl spec))
-	       ((_ _)
-		(syntax-error ',spec
-			      "Length mismatch. ~S but ~S"
-			      ',spec ,var))))
-	    (let((,elt
-		   (car ,sl)))
-	      (if(functionp ,elt)
-		(case(extended-marker(millet:function-name ,elt))
-		  (#\?
-		   (unless(local-check (car ,vl),elt)
-		     (push "dummy" ,vl)))
-		  ((#\+ #\*)
-		   (local-check ,vl ,elt)
-		   (setf ,vl nil))
-		  (otherwise
-		    (local-check (car ,vl),elt)))
-		(local-check(car ,vl),elt)))))))))
+     (<local-cons-check-form> name var spec))))
+
+(defun <local-type-check-form>(name var spec)
+  (cond
+    ((t-p spec)
+     nil)
+    ((eql nil (millet:type-expand spec))
+     (syntax-error 'check-bnf "NIL is invalid.~%HINT: NULL?"))
+    (t
+      (<check-type-form> name var spec))))
+
+(defun <local-atom-check-form>(name var spec)
+  (multiple-value-bind(but mark)(but-extended-marker spec)
+    (case mark
+      ((#\+ #\*)
+       `(funcall (,(find-symbol (format nil "~C-CHECKER" mark)
+				:check-bnf)
+		   ',name #',but)
+		 ,var))
+      (otherwise `(,spec ,var)))))
+
+(defun <local-or-check-form>(name var spec)
+  (if(t-p spec)
+    nil
+    `(tagbody ,@(maplist (lambda(forms)
+			   `(handler-case ,(car forms)
+			      (syntax-error()
+				,(if(cdr forms)
+				   nil
+				   `(syntax-error ',name "but ~S" ,var)))
+			      (:no-error(&rest args)
+				(declare(ignore args)))))
+			 (mapcar (lambda(spec)
+				   (<local-check-form> name var spec))
+				 (cdr spec))))))
+
+(defun <local-cons-check-form>(name var spec)
+  (if(t-p spec)
+    `(unless(cons-equal ,var ',spec)
+       (syntax-error ',spec
+		     "Length mismatch. ~S but ~S"
+		     ',spec ,var))
+    (alexandria:with-gensyms(vl sl elt)
+      `(do*((,vl ,var (cdr ,vl))
+	    (,sl ,(<spec-form> spec name)
+		 (cdr ,sl)))
+	 ((or (atom ,vl)
+	      (atom ,sl))
+	  (trivia:match*(,vl ,sl)
+	    ((nil nil))
+	    (((type atom)(type atom))
+	     (local-check ,vl ,sl))
+	    ((nil (list spec))
+	     (local-check ,vl spec))
+	    ((_ _)
+	     (syntax-error ',spec
+			   "Length mismatch. ~S but ~S"
+			   ',spec ,var))))
+	 (let((,elt
+		(car ,sl)))
+	   (if(functionp ,elt)
+	     (case(extended-marker(millet:function-name ,elt))
+	       (#\?
+		(unless(local-check (car ,vl),elt)
+		  (push "dummy" ,vl)))
+	       ((#\+ #\*)
+		(local-check ,vl ,elt)
+		(setf ,vl nil))
+	       (otherwise
+		 (local-check (car ,vl),elt)))
+	     (local-check(car ,vl),elt)))))))
 
 (defun <spec-form>(spec name)
   (cond
