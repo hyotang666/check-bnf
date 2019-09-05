@@ -78,19 +78,25 @@
 			      mark))))
 		  definitions)))
 
+(declaim (ftype (function (T)
+			  (values (or null string)
+				  (or null character)
+				  &optional))
+		but-extended-marker))
 (defun but-extended-marker(thing)
-  (and (symbolp thing)
-       (let((mark
-	      (extended-marker thing)))
-	 (case mark
-	   ((#\? #\* #\+)
-	    (let((name
-		   (symbol-name thing)))
-	      (values (subseq name 0 (1- (length name)))
-		      mark)))
-	   (otherwise
-	     (values (symbol-name thing)
-		     nil))))))
+  (if(not (symbolp thing))
+    (values nil nil)
+    (let((marK
+	   (extended-marker thing)))
+      (case mark
+	((#\? #\* #\+)
+	 (let((name
+		(symbol-name thing)))
+	   (values (subseq name 0 (1- (length name)))
+		   mark)))
+	(otherwise
+	  (values (symbol-name thing)
+		  nil))))))
 
 (defun or-formatter(form)
   (typecase form
