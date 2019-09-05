@@ -77,7 +77,9 @@
 			      (and list (null(cdr list))) ; one-element-p
 			      list
 			      mark))))
-		  definitions)))
+		  (if(typep definitions '(cons (eql check-bnf)*))
+		    (cddr definitions)
+		    definitions))))
 
 (declaim (ftype (function (T)
 			  (values (or null symbol)
