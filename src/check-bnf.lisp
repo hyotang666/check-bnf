@@ -304,7 +304,7 @@
 			',spec ,var))
        (alexandria:with-gensyms(vl sl elt)
 	 `(do*((,vl ,var (cdr ,vl))
-	       (,sl ,(<spec-form> spec)
+	       (,sl ,(<spec-form> spec name)
 		    (cdr ,sl)))
 	    ((or (atom ,vl)
 		 (atom ,sl))
@@ -332,18 +332,24 @@
 		    (local-check (car ,vl),elt)))
 		(local-check(car ,vl),elt)))))))))
 
-(defun <spec-form>(spec)
+(defun <spec-form>(spec name)
   (cond
     ((null spec)nil)
     ((millet:type-specifier-p spec)
      `',spec)
     ((atom spec)
-     `#',spec)
+     (multiple-value-bind(but mark)(but-extended-marker spec)
+       (if(and (find mark "+*")
+	       (assoc but *bnf* :test #'string=))
+	 (ecase mark
+	   (#\+`(+-checker ',name #',(intern but)))
+	   (#\*`(*-checker ',name #',(intern but))))
+	 `#',spec)))
     ((typep spec '(cons (eql or)*))
      (error "NIY"))
     ((consp spec)
-     `(cons ,(<spec-form> (car spec))
-	    ,(<spec-form> (cdr spec))))))
+     `(cons ,(<spec-form> (car spec)name)
+	    ,(<spec-form> (cdr spec)name)))))
 
 (defun local-check(name spec)
   (cond
