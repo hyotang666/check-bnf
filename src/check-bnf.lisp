@@ -134,6 +134,10 @@
 (defun cons-equal(list1 list2)
   (tree-equal list1 list2 :test (constantly t)))
 
+(defun ignored(arg)
+  (declare(ignore arg))
+  nil)
+
 ;;;; CHECK-BNF
 (defmacro check-bnf(&whole whole
 			   &environment env
@@ -241,9 +245,10 @@
 			      (values ,g c))
 			    (:no-error(&rest args)
 			      (declare(ignore args))
-			      (values ,g nil)))))
+			      (values ,g nil)))
+		:else :collect `(ignored ,g)))
 	)
-    (if(null forms)
+    (if(null (remove 'ignored forms :key #'car))
       nil
       `(progn
 	 ,@(when(< 1 length)
