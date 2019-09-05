@@ -300,17 +300,19 @@
 (defun <local-or-check-form>(name var spec)
   (if(t-p spec)
     nil
-    `(tagbody ,@(maplist (lambda(forms)
-			   `(handler-case ,(car forms)
-			      (syntax-error()
-				,(if(cdr forms)
-				   nil
-				   `(syntax-error ',name "but ~S" ,var)))
-			      (:no-error(&rest args)
-				(declare(ignore args)))))
-			 (mapcar (lambda(spec)
-				   (<local-check-form> name var spec))
-				 (cdr spec))))))
+    `(tagbody
+       (or ,@(maplist (lambda(forms)
+			`(handler-case ,(car forms)
+			   (syntax-error()
+			     ,(if(cdr forms)
+				nil
+				`(syntax-error ',name "but ~S" ,var)))
+			   (:no-error(&rest args)
+			     (declare(ignore args))
+			     T)))
+		      (mapcar (lambda(spec)
+				(<local-check-form> name var spec))
+			      (cdr spec)))))))
 
 (defun <local-cons-check-form>(name var spec)
   (if(t-p spec)
