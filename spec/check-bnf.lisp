@@ -342,6 +342,12 @@
       (required keyword)))
 :signals syntax-error
 
+#?(let((var '(symbol)))
+    (check-bnf()
+      (var (or string name*))
+      (name symbol)))
+=> NIL
+
 (requirements-about EXPRESSION :doc-type type)
 ;;;; Description:
 ;;;; Compound Type Specifier Kind:
