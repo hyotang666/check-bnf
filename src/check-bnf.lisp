@@ -79,7 +79,7 @@
 		  definitions)))
 
 (declaim (ftype (function (T)
-			  (values (or null string)
+			  (values (or null symbol)
 				  (or null character)
 				  &optional))
 		but-extended-marker))
@@ -92,10 +92,10 @@
 	((#\? #\* #\+)
 	 (let((name
 		(symbol-name thing)))
-	   (values (subseq name 0 (1- (length name)))
+	   (values (intern(subseq name 0 (1- (length name))))
 		   mark)))
 	(otherwise
-	  (values (symbol-name thing)
+	  (values thing
 		  nil))))))
 
 (defun or-formatter(form)
@@ -340,10 +340,10 @@
     ((atom spec)
      (multiple-value-bind(but mark)(but-extended-marker spec)
        (if(and (find mark "+*")
-	       (assoc but *bnf* :test #'string=))
+	       (assoc but *bnf*))
 	 (ecase mark
-	   (#\+`(+-checker ',name #',(intern but)))
-	   (#\*`(*-checker ',name #',(intern but))))
+	   (#\+`(+-checker ',name #',but))
+	   (#\*`(*-checker ',name #',but)))
 	 `#',spec)))
     ((typep spec '(cons (eql or)*))
      (error "NIY"))
@@ -451,10 +451,10 @@
 		       (eq t (millet:type-expand thing))))
 		    ((atom thing)
 		     (multiple-value-bind(but mark)(but-extended-marker thing)
-		       (if(null(assoc but *bnf* :test #'string=))
+		       (if(null(assoc but *bnf*))
 			 (error "NIY")
 			 (when mark
-			   (t-p(intern but))))))
+			   (t-p but)))))
 		    ((typep thing '(cons (eql or) *))
 		     (some #'rec (cdr thing)))
 		    ((consp thing)
