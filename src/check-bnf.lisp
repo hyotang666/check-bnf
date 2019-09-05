@@ -226,7 +226,7 @@
 			      (values ,g nil)))))
 	)
     (if(null forms)
-      `(declare(ignore ,name))
+      nil
       `(progn
 	 ,@(when(< 1 length)
 	     `((let((mod
@@ -385,9 +385,7 @@
     `(,name(,name)
        (if(atom ,name)
 	 (syntax-error ',name "Require CONS but ~S" ,name)
-	 ,(if(typep *form '(cons (eql declare)*))
-	    nil
-	    *form)))))
+	 ,*form))))
 
 (defun *-checker(name cont)
   (lambda(arg)
