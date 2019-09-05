@@ -348,6 +348,12 @@
       (name symbol)))
 => NIL
 
+#?(let((var "string"))
+    (check-bnf()
+      (var (or string name*))
+      (name symbol)))
+=> NIL
+
 (requirements-about EXPRESSION :doc-type type)
 ;;;; Description:
 ;;;; Compound Type Specifier Kind:
