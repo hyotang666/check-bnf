@@ -449,6 +449,12 @@
 		     (if(typep thing '(cons (eql or)*))
 		       (some #'rec (cdr thing))
 		       (eq t (millet:type-expand thing))))
+		    ((atom thing)
+		     (multiple-value-bind(but mark)(but-extended-marker thing)
+		       (if(null(assoc but *bnf* :test #'string=))
+			 (error "NIY")
+			 (when mark
+			   (t-p(intern but))))))
 		    ((typep thing '(cons (eql or) *))
 		     (some #'rec (cdr thing)))
 		    ((consp thing)
@@ -458,7 +464,5 @@
 			  T
 			  (t-p spec)))
 		       (unless(t-p(car spec))
-			 (return nil))))
-		    (t
-		      (error "NIY")))))))
+			 (return nil)))))))))
       (rec thing))))
