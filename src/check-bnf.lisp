@@ -267,7 +267,7 @@
 			       ,name)))
 		 ,@forms))))))
 
-(defun <local-check-form>(name var spec &optional fun)
+(defun <local-check-form>(name var spec)
   (cond
     ((millet:type-specifier-p spec)
      (cond
@@ -278,9 +278,7 @@
        (t
 	 (<check-type-form> name var spec))))
     ((atom spec)
-     (if fun
-       `(,fun ,spec ,var)
-       `(,spec ,var)))
+     `(,spec ,var))
     ((typep spec '(cons (eql or)*))
      (if(t-p spec)
        nil
