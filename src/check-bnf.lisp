@@ -361,11 +361,12 @@
      `',spec)
     ((atom spec)
      (multiple-value-bind(but mark)(but-extended-marker spec)
-       (if(and (find mark "+*")
+       (if(and (find mark "+*?")
 	       (assoc but *bnf*))
 	 (ecase mark
 	   (#\+`(+-checker ',name #',but))
-	   (#\*`(*-checker ',name #',but)))
+	   (#\*`(*-checker ',name #',but))
+	   (#\?`(?-checker #',but)))
 	 `#',spec)))
     ((typep spec '(cons (eql or)*))
      (error "NIY"))
@@ -454,6 +455,10 @@
 	(:no-error(&rest args)
 	  (declare(ignore args))
 	  nil)))))
+
+(defun ?-checker(cont)
+  (lambda(arg)
+    (ignore-errors(funcall cont arg))))
 
 ;;;; SPEC-INFER
 (defun t-p(thing &optional(*bnf* *bnf*))
