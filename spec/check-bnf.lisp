@@ -37,6 +37,16 @@
   (let((check-bnf::*whole* nil)
        (check-bnf::*bnf* '((a t))))))
 
+#?(check-bnf()
+    (a* t))
+:expanded-to
+(labels((a*(a*)
+	  (if (typep a* '(and atom (not null)))
+	    (syntax-error 'a* "Require LIST but ~S." a*)
+	    nil)))
+  (let((check-bnf::*whole* nil)
+       (check-bnf::*bnf* '((a* t))))))
+
 ; Also it occur in OR form.
 #?(check-bnf()
     (a (or symbol t string)))
