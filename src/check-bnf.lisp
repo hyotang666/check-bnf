@@ -50,7 +50,8 @@
   (let((acc))
     (labels((rec(thing)
 	      (let((definition
-		     (assoc thing bnf)))
+		     (or (assoc thing bnf)
+			 (assoc (but-extended-marker thing) bnf))))
 		(if definition
 		  (progn (pushnew definition acc :key #'car)
 			 (body (cdr definition)))
