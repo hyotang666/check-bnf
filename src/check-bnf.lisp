@@ -74,7 +74,7 @@
 			      (cddr definitions))))
   (format nil "~:{~VA := ~:[[ ~{~A~^ ~} ]~;~{~A~}~]~@[~A~]~%~}"
 	  (let((num (reduce #'max definitions
-			    :key (alexandria:compose #'length #'string #'car))))
+			    :key (alexandria:compose 'length 'string 'car))))
 	    (mapcar (lambda(definition)
 		      (multiple-value-bind(name mark)(but-extended-marker
 						       (car definition))
