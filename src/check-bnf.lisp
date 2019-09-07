@@ -343,13 +343,13 @@
 		 (cdr ,sl)))
 	 ((or (atom ,vl)
 	      (atom ,sl))
-	  (trivia:match*(,vl ,sl)
-	    ((nil nil))
-	    (((type atom)(type atom))
+	  (matrix-case:matrix-typecase(,vl ,sl)
+	    ((null null))
+	    ((atom atom)
 	     (local-check ,vl ,sl))
-	    ((nil (list spec))
-	     (local-check ,vl spec))
-	    ((_ _)
+	    ((null (cons * null))
+	     (local-check ,vl (car ,sl)))
+	    (otherwise
 	     (syntax-error ',spec
 			   "Length mismatch. ~S but ~S"
 			   ',spec ,var))))
@@ -411,11 +411,11 @@
 	  (value name (cdr value)))
        ((or (atom spec)
 	    (atom value))
-	(trivia:match*(spec value)
-	  ((nil nil))
-	  (((type atom)(type atom))
+	(matrix-case:matrix-typecase(spec value)
+	  ((null null))
+	  ((atom atom)
 	   (local-check value spec))
-	  ((_ _)
+	  (otherwise
 	   (syntax-error spec
 			 "Length mismatch. ~S but ~S"
 			 spec name))))
