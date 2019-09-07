@@ -23,7 +23,7 @@ It helps the third person to understand your macro.
 (defmacro defun (&whole whole name lambda-list &body body)
   (check-bnf(:whole whole)
     (name (or symbol setf-name))
-    (setf-name ((eql setf) name))
+    (setf-name ((eql setf) symbol))
     (lambda-list list))
   (list* name lambda-list body))
 
@@ -31,7 +31,7 @@ It helps the third person to understand your macro.
 ;; SYNTAX-ERROR
   Syntax-error in DEFUN
 NAME      := [ SYMBOL | SETF-NAME ]
-SETF-NAME := ((EQL SETF) NAME)
+SETF-NAME := ((EQL SETF) SYMBOL)
 but "name"
 in (DEFUN "name" NIL :DUMMY)
 ```
