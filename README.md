@@ -49,7 +49,7 @@ MIT
 SBCL
 
 ### Tested with
-SBCL/1.5.5
+SBCL/1.5.6
 CCL/1.11.5
 
 ### Test fails with
