@@ -174,19 +174,20 @@
       (clause+ clause+)))
 
   ;; Body of CHECK-BNF.
-  (let((*bnf* (mapcar (lambda(clause)
-			(cons (alexandria:ensure-car clause)
-			      (cdr clause)))
-		      clause+)))
-    `(labels,(loop :for clause :in clause+
-		   :collect (<local-fun> clause))
-       (let((*whole* ,whole?)
-	    (*bnf* ',*bnf*))
-	 ,@(loop :for (var-spec) :in clause+
-		 :for (name . var) := (alexandria:ensure-list var-spec)
-		 :when (eq :lexical (cltl2:variable-information name env))
-		 :collect `(,name ,(or (car var)
-				       name)))))))
+  (when(fboundp(find-symbol "VARIABLE-INFORMATION" "CLTL2"))
+    (let((*bnf* (mapcar (lambda(clause)
+			  (cons (alexandria:ensure-car clause)
+				(cdr clause)))
+			clause+)))
+      `(labels,(loop :for clause :in clause+
+		     :collect (<local-fun> clause))
+	 (let((*whole* ,whole?)
+	      (*bnf* ',*bnf*))
+	   ,@(loop :for (var-spec) :in clause+
+		   :for (name . var) := (alexandria:ensure-list var-spec)
+		   :when (eq :lexical (cltl2:variable-information name env))
+		   :collect `(,name ,(or (car var)
+					 name))))))))
 
 (defun <local-fun>(clause)
   (destructuring-bind(var-spec . spec+)clause

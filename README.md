@@ -39,6 +39,9 @@ in (DEFUN "name" NIL :DUMMY)
 For detail, see spec/check-bnf.lisp
 
 ## From developer
+CHECK-BNF heavily depends on TRIVIAL-CLTL2:VARIABLE-INFORMATION.
+(especially its first return value.)
+If trivial-cltl2 does not support your lisp, CHECK-BNF warns when loading and do nothing.
 
 ### Product's goal
 
@@ -51,9 +54,6 @@ SBCL
 ### Tested with
 SBCL/1.5.6
 CCL/1.11.5
-
-### Test fails with
-CLISP due to TRIVIA fails to load.
 
 ## Installation
 
