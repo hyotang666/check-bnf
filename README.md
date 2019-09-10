@@ -22,9 +22,9 @@ It helps the third person to understand your macro.
 ```lisp
 (defmacro defun (&whole whole name lambda-list &body body)
   (check-bnf(:whole whole)
-    (name (or symbol setf-name))
-    (setf-name ((eql setf) symbol))
-    (lambda-list list))
+    ((name (or symbol setf-name))
+     (setf-name ((eql setf) symbol)))
+    ((lambda-list list)))
   (list* name lambda-list body))
 
 (defun "name" () :dummy)
@@ -39,9 +39,6 @@ in (DEFUN "name" NIL :DUMMY)
 For detail, see spec/check-bnf.lisp
 
 ## From developer
-CHECK-BNF heavily depends on TRIVIAL-CLTL2:VARIABLE-INFORMATION.
-(especially its first return value.)
-If trivial-cltl2 does not support your lisp, CHECK-BNF warns when loading and do nothing.
 
 ### Product's goal
 
