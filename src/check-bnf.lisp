@@ -140,27 +140,25 @@
 
 ;;;; CHECK-BNF
 (defmacro check-bnf(&whole whole
-			   &environment env
 			   (&key ((:whole whole?)))
-			   &rest clause+)
+			   &rest def+)
   ;; THIS IS THE WHAT WE WANT TO WRITE.
   #++(check-bnf(:whole whole :name 'check-bnf)
-       (whole (or null expression))
-       (name (or null expression))
-       (clause+ (var-spec spec+))
-       (var-spec (or bnf-name alias))
-       (bnf-name symbol)
-       (alias (bnf-name var-name))
-       (var-name symbol)
-       (or-form ((eql or)spec+))
-       (spec+ (or type-specifier bnf-name or-form spec+))
-       )
+       ((whole (or null expression)))
+       ((def+ (clause+))
+	(clause (var-spec spec+))
+	(var-spec (or bnf-name alias))
+	(bnf-name symbol)
+	(alias (bnf-name var-name))
+	(var-name symbol)
+	(spec+ (or type-specifier bnf-name or-form spec+))
+	(or-form ((eql or)spec+))))
 
   ;; THIS IS THE WHAT WE WANT TO GENERATE.
-  (labels((clause+(clause+)
-	    (if(null clause+)
-	      (syntax-error 'clause+ "Require at least one, but null")
-	      (loop :for (var-spec . spec+) :in clause+
+  (labels((def+(def+)
+	    (if(null def+)
+	      (syntax-error 'def+ "Require at least one, but null")
+	      (loop :for (var-spec . spec+) :in (apply #'append def+)
 		    :do (var-spec var-spec)
 		    (spec+ spec+))))
 	  (var-spec(var-spec)
@@ -171,23 +169,20 @@
 	    (if(null spec+)
 	      (syntax-error 'spec+ "Require at least one, but null"))))
     (let((*whole* whole))
-      (clause+ clause+)))
+      (def+ def+)))
 
   ;; Body of CHECK-BNF.
-  (when(fboundp(find-symbol "VARIABLE-INFORMATION" "CLTL2"))
-    (let((*bnf* (mapcar (lambda(clause)
-			  (cons (alexandria:ensure-car clause)
-				(cdr clause)))
-			clause+)))
-      `(labels,(loop :for clause :in clause+
-		     :collect (<local-fun> clause))
-	 (let((*whole* ,whole?)
-	      (*bnf* ',*bnf*))
-	   ,@(loop :for (var-spec) :in clause+
-		   :for (name . var) := (alexandria:ensure-list var-spec)
-		   :when (eq :lexical (cltl2:variable-information name env))
-		   :collect `(,name ,(or (car var)
-					 name))))))))
+  `(let((*whole* ,whole?))
+     ,@(loop :for def :in def+
+	     :for *bnf* = (mapcar (lambda(clause)
+				    (cons (alexandria:ensure-car (car clause))
+					  (cdr clause)))
+				  def)
+	     :for (name arg) = (alexandria:ensure-list(caar def))
+	     :collect `(let((*bnf* ',*bnf*))
+			 (labels,(loop :for clause :in def
+				       :collect (<local-fun> clause))
+			   (,name ,(or arg name)))))))
 
 (defun <local-fun>(clause)
   (destructuring-bind(var-spec . spec+)clause

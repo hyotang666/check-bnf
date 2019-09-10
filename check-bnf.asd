@@ -2,23 +2,17 @@
 (in-package :asdf)
 (defsystem "check-bnf"
   :version
-  "5.9.2"
+  "6.0.0"
   :depends-on
   (
    "millet" ; Wrapper for implementation dependent tiny utilities.
    "alexandria" ; Public domain utilities.
-   "trivial-cltl2" ; Wrapper for cltl2.
    "matrix-case" ; Control flow.
    )
   :pathname
   "src/"
   :components
   ((:file "check-bnf")))
-
-(defmethod operate :after ((o load-op)(c (eql (find-system "check-bnf")))&key)
-  (unless(fboundp(find-symbol "VARIABLE-INFORMATION" "CLTL2"))
-    (warn "CHECK-BNF does not work in ~A due to TRIVIAL-CLTL2 does not support."
-          (lisp-implementation-type))))
 
 ;; These forms below are added by JINGOH.GENERATOR.
 (in-package :asdf)
