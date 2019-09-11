@@ -372,7 +372,7 @@
 		   (ecase mark
 		     (#\+`(+-checker ',name #',but))
 		     (#\*`(*-checker ',name #',but))
-		     (#\?`(?-checker #',but)))
+		     (#\? `#',but))
 		   `#',spec))))
     ((typep spec '(cons (eql or)*))
      (error "NIY"))
@@ -464,10 +464,6 @@
 	(:no-error(&rest args)
 	  (declare(ignore args))
 	  nil)))))
-
-(defun ?-checker(cont)
-  (lambda(arg)
-    (funcall cont arg)))
 
 ;;;; SPEC-INFER
 (defun t-p(thing &optional(*bnf* *bnf*))
