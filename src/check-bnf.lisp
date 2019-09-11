@@ -468,7 +468,11 @@
 
 (defun ?-checker(cont)
   (lambda(arg)
-    (ignore-errors(funcall cont arg))))
+    (handler-case(funcall cont arg)
+      (error()nil)
+      (:no-error(&rest args)
+	(declare(ignore args))
+	T))))
 
 ;;;; SPEC-INFER
 (defun t-p(thing &optional(*bnf* *bnf*))
