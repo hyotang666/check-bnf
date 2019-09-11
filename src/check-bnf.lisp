@@ -342,15 +342,9 @@
 	  (matrix-case:matrix-typecase(,vl ,sl)
 	    ((null null))
 	    ((atom atom)
-	     (local-check ,vl (if(vectorp ,sl)
-				(elt ,sl 1)
-				,sl)))
+	     (local-check ,vl ,sl))
 	    ((null (cons * null))
-	     (let((elt
-		    (car ,sl)))
-	       (local-check ,vl (if(vectorp elt)
-				  (elt elt 1)
-				  elt))))
+	     (local-check ,vl (car ,sl)))
 	    (otherwise
 	     (syntax-error ',spec
 			   "Length mismatch. ~S but ~S"
@@ -360,13 +354,13 @@
 	   (if(vectorp ,elt)
 	     (case(extended-marker(elt ,elt 0))
 	       (#\?
-		(unless(local-check (car ,vl)(elt ,elt 1))
+		(unless(local-check (car ,vl),elt)
 		  (push "dummy" ,vl)))
 	       ((#\+ #\*)
-		(local-check ,vl (elt ,elt 1))
+		(local-check ,vl ,elt)
 		(setf ,vl nil))
 	       (otherwise
-		 (local-check (car ,vl)(elt ,elt 1))))
+		 (local-check (car ,vl),elt)))
 	     (local-check(car ,vl),elt)))))))
 
 (defun <spec-form>(spec name)
@@ -398,8 +392,8 @@
 	 (syntax-error name
 		       "but ~S, it is type-of ~S"
 		       name (type-of name)))))
-    ((atom spec)
-     (funcall spec name))
+    ((vectorp spec)
+     (funcall (elt spec 1)name))
     ((typep spec '(cons (eql or)*))
      (loop :for (spec+ . rest) :on (cdr spec)
 	   :if (null rest)
