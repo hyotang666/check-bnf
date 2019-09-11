@@ -206,15 +206,6 @@
 	     `((declare(ignore ,name))
 	       NIL))))))
 
-(defun <?form>(name spec+)
-  (if(cdr spec+)
-    (error "BNF definition error: ~S must have + or * its name at last."
-	   name)
-    `(,name(,name)
-       ,@(if(eql t (millet:type-expand (car spec+)))
-	   `((declare(ignore(,name)))T)
-	   `((typep ,name ',(car spec+)))))))
-
 (defun <check-type-form>(name var type-specifier)
   `(unless(typep ,var ',type-specifier)
      (syntax-error ',name "but ~S, it is type-of ~S" ,var (type-of ,var))))
