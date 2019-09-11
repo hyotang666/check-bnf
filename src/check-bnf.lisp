@@ -342,25 +342,31 @@
 	  (matrix-case:matrix-typecase(,vl ,sl)
 	    ((null null))
 	    ((atom atom)
-	     (local-check ,vl ,sl))
+	     (local-check ,vl (if(vectorp ,sl)
+				(elt ,sl 1)
+				,sl)))
 	    ((null (cons * null))
-	     (local-check ,vl (car ,sl)))
+	     (let((elt
+		    (car ,sl)))
+	       (local-check ,vl (if(vectorp elt)
+				  (elt elt 1)
+				  elt))))
 	    (otherwise
 	     (syntax-error ',spec
 			   "Length mismatch. ~S but ~S"
 			   ',spec ,var))))
 	 (let((,elt
 		(car ,sl)))
-	   (if(functionp ,elt)
-	     (case(extended-marker(millet:function-name ,elt))
+	   (if(vectorp ,elt)
+	     (case(extended-marker(elt ,elt 0))
 	       (#\?
-		(unless(local-check (car ,vl),elt)
+		(unless(local-check (car ,vl)(elt ,elt 1))
 		  (push "dummy" ,vl)))
 	       ((#\+ #\*)
-		(local-check ,vl ,elt)
+		(local-check ,vl (elt ,elt 1))
 		(setf ,vl nil))
 	       (otherwise
-		 (local-check (car ,vl),elt)))
+		 (local-check (car ,vl)(elt ,elt 1))))
 	     (local-check(car ,vl),elt)))))))
 
 (defun <spec-form>(spec name)
@@ -370,13 +376,14 @@
      `',spec)
     ((atom spec)
      (multiple-value-bind(but mark)(but-extended-marker spec)
-       (if(and (find mark "+*?")
-	       (assoc but *bnf*))
-	 (ecase mark
-	   (#\+`(+-checker ',name #',but))
-	   (#\*`(*-checker ',name #',but))
-	   (#\?`(?-checker #',but)))
-	 `#',spec)))
+       `(vector ',spec
+		,(if(and (find mark "+*?")
+			 (assoc but *bnf*))
+		   (ecase mark
+		     (#\+`(+-checker ',name #',but))
+		     (#\*`(*-checker ',name #',but))
+		     (#\?`(?-checker #',but)))
+		   `#',spec))))
     ((typep spec '(cons (eql or)*))
      (error "NIY"))
     ((consp spec)
