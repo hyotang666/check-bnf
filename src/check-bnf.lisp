@@ -191,7 +191,6 @@
       (case(extended-marker name)
 	(#\+ (<+form> name spec+))
 	(#\* (<*form> name spec+))
-	(#\? (<?form> name spec+))
 	(otherwise
 	  (<require-form> name spec+))))))
 
@@ -344,7 +343,13 @@
 	    ((atom atom)
 	     (local-check ,vl ,sl))
 	    ((null (cons * null))
-	     (local-check ,vl (car ,sl)))
+	     (let((elt
+		    (car ,sl)))
+	       (if(vectorp elt)
+		 (case(extended-marker(elt elt 0))
+		   (#\? (ignore-errors(local-check ,vl elt)))
+		   (otherwise (local-check ,vl elt)))
+		 (local-check ,vl (car ,sl)))))
 	    (otherwise
 	     (syntax-error ',spec
 			   "Length mismatch. ~S but ~S"
@@ -354,8 +359,8 @@
 	   (if(vectorp ,elt)
 	     (case(extended-marker(elt ,elt 0))
 	       (#\?
-		(unless(local-check (car ,vl),elt)
-		  (push "dummy" ,vl)))
+		(handler-case(local-check (car ,vl),elt)
+		  (error()(push "dummy" ,vl))))
 	       ((#\+ #\*)
 		(local-check ,vl ,elt)
 		(setf ,vl nil))
@@ -384,6 +389,9 @@
      `(cons ,(<spec-form> (car spec)name)
 	    ,(<spec-form> (cdr spec)name)))))
 
+(declaim (ftype (function(t t)(values null ; or signals an error.
+				      &optional))
+		local-check))
 (defun local-check(name spec)
   (cond
     ((millet:type-specifier-p spec)
@@ -420,8 +428,8 @@
 	      (car spec)))
 	 (if(and (symbolp elt)
 		 (eql #\? (extended-marker elt)))
-	   (unless(local-check(car value)elt)
-	     (push "dummy" value)) ; as rewind.
+	   (handler-case(local-check(car value)elt)
+	     (error()(push "dummy" value))) ; as rewind.
 	   (local-check (car value)elt)))))))
 
 (defun <+form>(name spec+)
@@ -468,11 +476,7 @@
 
 (defun ?-checker(cont)
   (lambda(arg)
-    (handler-case(funcall cont arg)
-      (error()nil)
-      (:no-error(&rest args)
-	(declare(ignore args))
-	T))))
+    (funcall cont arg)))
 
 ;;;; SPEC-INFER
 (defun t-p(thing &optional(*bnf* *bnf*))
