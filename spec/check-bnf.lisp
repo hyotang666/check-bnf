@@ -201,7 +201,7 @@
 :signals syntax-error
 
 #+syntax
-(CHECK-BNF (&key ((:whole whole?))) &rest clause+) ; => result
+(CHECK-BNF (&key ((:whole whole?))) &rest def+) ; => result
 
 ;;;; Arguments and Values:
 
@@ -237,6 +237,7 @@
 			  '(whole ("not-symbol")))
 		(princ-to-string condition)))
 
+; def := (clause+)+
 ; clause := (var-spec spec+)
 ; var-spec := [ name | (name name) ]
 ; name := SYMBOL, otherwise error.
