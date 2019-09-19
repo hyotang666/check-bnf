@@ -219,23 +219,23 @@
       ((a symbol))))
 :invokes-debugger syntax-error
 ,:test (lambda(condition)
-	 (equal #.(format nil "A := SYMBOL~%~
-			  but \"not-symbol\", it is type-of ~S"
-			  (type-of "not-symbol"))
-		(princ-to-string condition)))
+	 (& (equal #.(format nil "A := SYMBOL~%~
+			     but \"not-symbol\", it is type-of ~S"
+			     (type-of "not-symbol"))
+		   (princ-to-string condition))))
 
 #?(let((a "not-symbol"))
     (check-bnf(:whole '(whole ("not-symbol")))
       ((a symbol))))
 :invokes-debugger syntax-error
 ,:test (lambda(condition)
-	 (equal #.(format nil "Syntax-error in WHOLE~%~
-			  A := SYMBOL~%~
-			  but \"not-symbol\", it is type-of ~S~%~
-			  in ~S"
-			  (type-of "not-symbol")
-			  '(whole ("not-symbol")))
-		(princ-to-string condition)))
+	 (& (equal #.(format nil "Syntax-error in WHOLE~%~
+			     A := SYMBOL~%~
+			     but \"not-symbol\", it is type-of ~S~%~
+			     in ~S"
+			     (type-of "not-symbol")
+			     '(whole ("not-symbol")))
+		   (princ-to-string condition))))
 
 ; def := (clause+)+
 ; clause := (var-spec spec+)
