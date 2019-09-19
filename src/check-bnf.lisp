@@ -34,7 +34,8 @@
 				    (bnf-definitions condition)))
 		     (simple-condition-format-control condition)
 		     (simple-condition-format-arguments condition)
-		     (whole-form<=syntax-error condition)))))
+		     (whole-form<=syntax-error condition))))
+  (:default-initargs :format-control ""))
 
 ;;;; SIGNALER
 (defun syntax-error(name format-control &rest format-arguments)
