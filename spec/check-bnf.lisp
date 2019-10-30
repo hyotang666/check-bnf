@@ -214,6 +214,7 @@
 
 ; Expects var for &WHOLE.
 ; When specified, header and footer is generated in error message.
+#-clisp
 #?(let((a "not-symbol"))
     (check-bnf()
       ((a symbol))))
@@ -224,6 +225,7 @@
 			     (type-of "not-symbol"))
 		   (princ-to-string condition))))
 
+#-clisp
 #?(let((a "not-symbol"))
     (check-bnf(:whole '(whole ("not-symbol")))
       ((a symbol))))
@@ -235,6 +237,20 @@
 			     in ~S"
 			     (type-of "not-symbol")
 			     '(whole ("not-symbol")))
+		   (princ-to-string condition))))
+
+; NOTE! CLISP specific bug(?).
+; I do not know why but CLISP does not call specified report function.
+; So header and footer is not generated.
+; After bug is removed, guard below will be failed.
+#+clisp
+#?(let((a "not-symbol"))
+    (check-bnf()
+      ((a symbol))))
+:invokes-debugger syntax-error
+,:test (lambda(condition)
+	 (& (equal #.(format nil "but \"not-symbol\", it is type-of ~S"
+			     (type-of "not-symbol"))
 		   (princ-to-string condition))))
 
 ; def := (clause+)+
