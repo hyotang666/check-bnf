@@ -3,6 +3,9 @@
 (defsystem "check-bnf"
   :version
   "6.4.2"
+  :description "Macro argumens checker."
+  :author "SATO Shinichi"
+  :license "MIT"
   :depends-on
   (
    "millet" ; Wrapper for implementation dependent tiny utilities.
