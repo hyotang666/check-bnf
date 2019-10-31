@@ -2,7 +2,7 @@
 (in-package :asdf)
 (defsystem "check-bnf"
   :version
-  "6.4.2"
+  "6.4.3"
   :description "Macro argumens checker."
   :author "SATO Shinichi"
   :license "MIT"

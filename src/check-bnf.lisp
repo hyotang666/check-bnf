@@ -266,7 +266,7 @@
 			 :when c
 			 :do (syntax-error
 			       ',name
-			       "but ~{~S~*~^ ~}~@?"
+			       "but ~{~S~^ ~}~@?"
 			       args
 			       "~%in ~S"
 			       ,name)))
