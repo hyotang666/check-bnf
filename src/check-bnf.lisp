@@ -27,7 +27,7 @@
 		:reader bnf-definitions))
   (:report (lambda(condition stream)
 	     (format stream
-		     "~@[Syntax-error in ~S~%~]~A~?~@[~%in ~S~]"
+		     "~@[Syntax-error in ~S~2%~]~A~%~?~@[~2%in ~S~]"
 		     (car(whole-form<=syntax-error condition))
 		     (format-definition
 		       (definitions (cell-error-name condition)
