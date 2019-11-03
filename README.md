@@ -1,4 +1,4 @@
-# check-bnf
+# CHECK-BNF 6.4.5
 ## What is this?
 Macro arguments checker.
 
@@ -30,9 +30,12 @@ It helps the third person to understand your macro.
 (defun "name" () :dummy)
 ;; SYNTAX-ERROR
   Syntax-error in DEFUN
+
 NAME      := [ SYMBOL | SETF-NAME ]
 SETF-NAME := ((EQL SETF) SYMBOL)
+
 but "name"
+
 in (DEFUN "name" NIL :DUMMY)
 ```
 
@@ -49,9 +52,10 @@ MIT
 SBCL
 
 ### Tested with
-* SBCL/1.5.7
+* SBCL/1.5.8
 * CCL/1.11.5
 * ECL/16.1.3
+* CLISP/2.49
 
 ## Installation
 
