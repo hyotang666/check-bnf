@@ -220,7 +220,7 @@
       ((a symbol))))
 :invokes-debugger syntax-error
 ,:test (lambda(condition)
-	 (& (equal #.(format nil "A := SYMBOL~%~
+	 (& (equal #.(format nil "A := SYMBOL~2%~
 			     but \"not-symbol\", it is type-of ~S"
 			     (type-of "not-symbol"))
 		   (princ-to-string condition))))
@@ -231,9 +231,9 @@
       ((a symbol))))
 :invokes-debugger syntax-error
 ,:test (lambda(condition)
-	 (& (equal #.(format nil "Syntax-error in WHOLE~%~
-			     A := SYMBOL~%~
-			     but \"not-symbol\", it is type-of ~S~%~
+	 (& (equal #.(format nil "Syntax-error in WHOLE~2%~
+			     A := SYMBOL~2%~
+			     but \"not-symbol\", it is type-of ~S~2%~
 			     in ~S"
 			     (type-of "not-symbol")
 			     '(whole ("not-symbol")))
