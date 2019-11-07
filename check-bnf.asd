@@ -2,7 +2,7 @@
 (in-package :asdf)
 (defsystem "check-bnf"
   :version
-  "6.4.5"
+  "6.4.6"
   :description "Macro arguments checker."
   :author "SATO Shinichi"
   :license "MIT"
@@ -17,11 +17,14 @@
   :components
   ((:file "check-bnf")))
 
-;; These forms below are added by JINGOH.GENERATOR.
+;;; These forms below are added by JINGOH.GENERATOR.
+;; Ensure in ASDF for pretty printings.
 (in-package :asdf)
+;; Enable testing via (asdf:test-system "check-bnf").
 (defmethod component-depends-on
            ((o test-op) (c (eql (find-system "check-bnf"))))
   (append (call-next-method) '((test-op "check-bnf.test"))))
+;; Enable passing parameter for JINGOH:EXAMINER via ASDF:TEST-SYSTEM.
 (defmethod operate :around
            ((o test-op) (c (eql (find-system "check-bnf")))
             &rest keys
@@ -40,12 +43,12 @@
     (let ((args (jingoh.args keys)))
       (declare (special args))
       (call-next-method))))
+;; Enable importing spec documentations.
 (let ((system (find-system "jingoh.documentizer" nil)))
-  (when (and system
-             (not(uiop:featurep :clisp)))
+  (when (and system (not (featurep :clisp)))
     (load-system system)
-    (defmethod operate :around
-               ((o load-op) (c (eql (find-system "check-bnf"))) &key)
+    (defmethod perform :around
+               ((o compile-op) (c (eql (find-system "check-bnf"))))
       (let* ((seen nil)
              (*default-pathname-defaults*
               (merge-pathnames "spec/" (system-source-directory c)))
