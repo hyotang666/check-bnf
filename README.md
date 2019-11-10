@@ -1,4 +1,4 @@
-# CHECK-BNF 6.4.5
+# CHECK-BNF 6.4.7
 ## What is this?
 Macro arguments checker.
 

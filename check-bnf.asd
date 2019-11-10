@@ -2,7 +2,7 @@
 (in-package :asdf)
 (defsystem "check-bnf"
   :version
-  "6.4.6"
+  "6.4.7"
   :description "Macro arguments checker."
   :author "SATO Shinichi"
   :license "MIT"
@@ -47,22 +47,7 @@
 (let ((system (find-system "jingoh.documentizer" nil)))
   (when (and system (not (featurep :clisp)))
     (load-system system)
-    (defmethod perform :around
-               ((o compile-op) (c (eql (find-system "check-bnf"))))
-      (let* ((seen nil)
-             (*default-pathname-defaults*
-              (merge-pathnames "spec/" (system-source-directory c)))
-             (*macroexpand-hook*
-              (let ((outer-hook *macroexpand-hook*))
-                (lambda (expander form env)
-                  (if (not (typep form '(cons (eql defpackage) *)))
-                      (funcall outer-hook expander form env)
-                      (if (find (cadr form) seen :test #'string=)
-                          (funcall outer-hook expander form env)
-                          (progn
-                           (push (cadr form) seen)
-                           `(progn
-                             ,form
-                             ,@(symbol-call :jingoh.documentizer :importer
-                                            form)))))))))
-        (call-next-method)))))
+    (defmethod perform :after
+               ((o load-op) (c (eql (find-system "resignal-bind"))))
+      (dolist (c (component-children c))
+        (symbol-call :jingoh.documentizer :import* c)))))
