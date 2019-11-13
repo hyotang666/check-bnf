@@ -2,7 +2,7 @@
 (in-package :asdf)
 (defsystem "check-bnf"
   :version
-  "6.4.8"
+  "6.4.9"
   :description "Macro arguments checker."
   :author "SATO Shinichi"
   :license "MIT"
@@ -48,5 +48,5 @@
   (when (and system (not (featurep :clisp)))
     (load-system system)
     (defmethod perform :after
-               ((o load-op) (c (eql (find-system "resignal-bind"))))
+               ((o load-op) (c (eql (find-system "check-bnf"))))
       (symbol-call :jingoh.documentizer :import c))))
