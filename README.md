@@ -1,4 +1,4 @@
-# CHECK-BNF 6.4.7
+# CHECK-BNF 6.4.10
 ## What is this?
 Macro arguments checker.
 
@@ -52,7 +52,7 @@ MIT
 SBCL
 
 ### Tested with
-* SBCL/1.5.8
+* SBCL/2.0.0
 * CCL/1.11.5
 * ECL/16.1.3
 * CLISP/2.49
