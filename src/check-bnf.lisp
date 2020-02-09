@@ -442,6 +442,7 @@
   (if (every #'listp (cdr exp))
       (format stream "~:<~W~^ ~:S~^ ~1I~_~@{~:<~@{~:S~^~:@_~}~:>~^~:@_~}~:>"
               exp)
-      (funcall (pprint-dispatch exp (copy-pprint-dispatch nil)) stream exp)))
+      (let((*print-pprint-dispatch* (copy-pprint-dispatch nil)))
+        (write exp :stream stream))))
 
 (set-pprint-dispatch '(cons (eql check-bnf)) 'pprint-check-bnf)
