@@ -143,7 +143,7 @@
 ;;;; CHECK-BNF
 (defmacro check-bnf(&whole whole
                            (&key ((:whole whole?)))
-                           &rest def+)
+                           &body def+)
   ;; THIS IS THE WHAT WE WANT TO WRITE.
   #++(check-bnf(:whole whole :name 'check-bnf)
        ((whole (or null expression)))
@@ -500,3 +500,12 @@
                        (unless(t-p(car spec))
                          (return nil)))))))))
       (rec thing))))
+
+;;;; PRETY-PRINTER.
+(defun pprint-check-bnf(stream exp)
+  (setf stream (or stream *standard-output*))
+  (if (every #'listp (cdr exp))
+    (format stream "~:<~W~^ ~:S~^ ~1I~_~@{~:<~@{~:S~^~:@_~}~:>~^~:@_~}~:>" exp)
+    (funcall (pprint-dispatch exp (copy-pprint-dispatch nil))
+             stream exp)))
+(set-pprint-dispatch '(cons (eql check-bnf)) 'pprint-check-bnf)

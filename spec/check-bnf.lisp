@@ -1,4 +1,5 @@
 (defpackage :check-bnf.spec
+  (:import-from #:check-bnf #:pprint-check-bnf)
   (:use :cl :jingoh :check-bnf))
 (in-package :check-bnf.spec)
 (setup :check-bnf)
@@ -435,3 +436,56 @@
 
 ;;;; Compound Type Specifier Description:
 
+(requirements-about PPRINT-CHECK-BNF :doc-type function)
+
+;;;; Description:
+
+#+syntax
+(PPRINT-CHECK-BNF stream exp
+                  :around (let((*print-pretty* t))
+                            (call-body))) ; => result
+
+;;;; Arguments and Values:
+
+; stream := 
+
+; exp := 
+
+; result := 
+
+;;;; Affected By:
+
+;;;; Side-Effects:
+
+;;;; Notes:
+
+;;;; Exceptional-Situations:
+
+;;;; Tests:
+#?(pprint-check-bnf nil '(check-bnf))
+:outputs "(CHECK-BNF)"
+
+#?(pprint-check-bnf nil '(check-bnf nil))
+:outputs "(CHECK-BNF ())"
+
+#?(pprint-check-bnf nil '(check-bnf nil nil))
+:outputs "(CHECK-BNF () ())"
+
+#?(pprint-check-bnf nil '(check-bnf nil not-list))
+=> unspecified ; Depending on implementation.
+
+#?(pprint-check-bnf nil '(check-bnf()
+                           ((a symbol))
+                           ((b string))))
+:outputs "(CHECK-BNF ()
+  ((A SYMBOL))
+  ((B STRING)))"
+
+#?(pprint-check-bnf nil '(check-bnf()
+                           ((function-name (or name setf-name))
+                            (name symbol)
+                            (setf-name ((eql setf)name)))))
+:outputs "(CHECK-BNF ()
+  ((FUNCTION-NAME (OR NAME SETF-NAME))
+   (NAME SYMBOL)
+   (SETF-NAME ((EQL SETF) NAME))))"
