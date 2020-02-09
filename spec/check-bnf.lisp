@@ -436,14 +436,14 @@
 
 ;;;; Compound Type Specifier Description:
 
-(requirements-about PPRINT-CHECK-BNF :doc-type function)
+(requirements-about PPRINT-CHECK-BNF :doc-type function
+                    :around (let((*print-pretty* t))
+                              (call-body)))
 
 ;;;; Description:
 
 #+syntax
-(PPRINT-CHECK-BNF stream exp
-                  :around (let((*print-pretty* t))
-                            (call-body))) ; => result
+(PPRINT-CHECK-BNF stream exp) ; => result
 
 ;;;; Arguments and Values:
 
