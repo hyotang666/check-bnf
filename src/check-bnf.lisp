@@ -27,8 +27,8 @@
      (format stream "~@[Syntax-error in ~S~2%~]~A~%~?~@[~2%in ~S~]"
              (car (whole-form<=syntax-error condition))
              (format-definition
-              (definitions (cell-error-name condition)
-                           (bnf-definitions condition)))
+               (definitions (cell-error-name condition)
+                            (bnf-definitions condition)))
              (simple-condition-format-control condition)
              (simple-condition-format-arguments condition)
              (whole-form<=syntax-error condition))))
@@ -68,25 +68,25 @@
   (when (typep definitions '(cons (eql check-bnf) *))
     (setf definitions
             (mapcar
-             (lambda (def) (cons (alexandria:ensure-car (car def)) (cdr def)))
-             (cddr definitions))))
+              (lambda (def) (cons (alexandria:ensure-car (car def)) (cdr def)))
+              (cddr definitions))))
   (format nil "~:{~VA := ~:[[ ~{~A~^ ~} ]~;~{~A~}~]~@[~A~]~%~}"
           (let ((num
                  (reduce #'max definitions
                          :initial-value 0
                          :key (alexandria:compose 'length 'string 'car))))
             (mapcar
-             (lambda (definition)
-               (multiple-value-bind (name mark)
-                   (but-extended-marker (car definition))
-                 (let ((list (mapcar #'or-formatter (cdr definition))))
-                   (list num name (and list (null (cdr list))) ; one-element-p
-                         list mark))))
-             definitions))))
+              (lambda (definition)
+                (multiple-value-bind (name mark)
+                    (but-extended-marker (car definition))
+                  (let ((list (mapcar #'or-formatter (cdr definition))))
+                    (list num name (and list (null (cdr list))) ; one-element-p
+                          list mark))))
+              definitions))))
 
 (declaim
  (ftype (function (t) (values (or null symbol) (or null character) &optional))
-  but-extended-marker))
+        but-extended-marker))
 
 (defun but-extended-marker (thing)
   (if (not (symbolp thing))
@@ -141,10 +141,11 @@
              (if (null def+)
                  (syntax-error 'def+ "Require at least one, but null")
                  (loop :for (var-spec . spec+) :in (apply #'append def+)
-                       :do (var-spec var-spec) (spec+ spec+))))
+                       :do (var-spec var-spec)
+                           (spec+ spec+))))
            (var-spec (var-spec)
-             (unless
-                 (typep var-spec '(or symbol (cons symbol (cons symbol null))))
+             (unless (typep var-spec
+                            '(or symbol (cons symbol (cons symbol null))))
                (syntax-error 'var-spec "but ~S" var-spec)))
            (spec+ (spec+)
              (if (null spec+)
@@ -156,10 +157,10 @@
      ,@(loop :for def :in def+
              :for *bnf*
                   = (mapcar
-                     (lambda (clause)
-                       (cons (alexandria:ensure-car (car clause))
-                             (cdr clause)))
-                     def)
+                      (lambda (clause)
+                        (cons (alexandria:ensure-car (car clause))
+                              (cdr clause)))
+                      def)
              :for (name arg) = (alexandria:ensure-list (caar def))
              :collect `(let ((*bnf* ',*bnf*))
                          (labels ,(loop :for clause :in def
@@ -239,11 +240,10 @@
                       ,@forms))))))
 
 (defun <local-check-form> (name var spec)
-  (cond
-   ((millet:type-specifier-p spec) (<local-type-check-form> name var spec))
-   ((atom spec) (<local-atom-check-form> name var spec))
-   ((typep spec '(cons (eql or) *)) (<local-or-check-form> name var spec))
-   ((consp spec) (<local-cons-check-form> name var spec))))
+  (cond ((millet:type-specifier-p spec) (<local-type-check-form> name var spec))
+        ((atom spec) (<local-atom-check-form> name var spec))
+        ((typep spec '(cons (eql or) *)) (<local-or-check-form> name var spec))
+        ((consp spec) (<local-cons-check-form> name var spec))))
 
 (defun <local-type-check-form> (name var spec)
   (cond ((t-p spec) nil)
@@ -257,9 +257,9 @@
     (case mark
       ((#\+ #\*)
        `(funcall
-         (,(find-symbol (format nil "~C-CHECKER" mark) :check-bnf) ',name
-          #',but)
-         ,var))
+          (,(find-symbol (format nil "~C-CHECKER" mark) :check-bnf) ',name
+           #',but)
+          ,var))
       (otherwise `(,spec ,var)))))
 
 (defun <local-or-check-form> (name var spec)
@@ -267,16 +267,16 @@
       nil
       `(tagbody
          (or ,@(maplist
-                (lambda (forms)
-                  `(handler-case ,(car forms)
-                     (syntax-error ()
-                       ,(if (cdr forms)
-                            nil
-                            `(syntax-error ',name "but ~S" ,var)))
-                     (:no-error (&rest args)
-                       (declare (ignore args)) t)))
-                (mapcar (lambda (spec) (<local-check-form> name var spec))
-                        (cdr spec)))))))
+                 (lambda (forms)
+                   `(handler-case ,(car forms)
+                      (syntax-error ()
+                        ,(if (cdr forms)
+                             nil
+                             `(syntax-error ',name "but ~S" ,var)))
+                      (:no-error (&rest args)
+                        (declare (ignore args)) t)))
+                 (mapcar (lambda (spec) (<local-check-form> name var spec))
+                         (cdr spec)))))))
 
 (defun <local-cons-check-form> (name var spec)
   (if (t-p spec)
@@ -311,7 +311,8 @@
                  (local-check (car ,vl) ,elt)))))))
 
 (defun <spec-form> (spec name)
-  (cond ((null spec) nil) ((millet:type-specifier-p spec) `',spec)
+  (cond ((null spec) nil)
+        ((millet:type-specifier-p spec) `',spec)
         ((atom spec)
          (multiple-value-bind (but mark)
              (but-extended-marker spec)
@@ -328,11 +329,10 @@
                 ,(<spec-form> (cdr spec) name)))))
 
 (declaim
- (ftype
-  (function (t t)
-   (values null ; or signals an error.
-           &optional))
-  local-check))
+ (ftype (function (t t)
+         (values null ; or signals an error.
+                 &optional))
+        local-check))
 
 (defun local-check (name spec)
   (cond
@@ -423,7 +423,8 @@
                            (but-extended-marker thing)
                          (if (null (assoc but *bnf*))
                              (error "NIY")
-                             (when mark (t-p but)))))
+                             (when mark
+                               (t-p but)))))
                       ((typep thing '(cons (eql or) *))
                        (some #'rec (cdr thing)))
                       ((consp thing)
@@ -432,7 +433,8 @@
                             (if (null spec)
                                 t
                                 (t-p spec)))
-                         (unless (t-p (car spec)) (return nil)))))))))
+                         (unless (t-p (car spec))
+                           (return nil)))))))))
       (rec thing))))
 
 ;;;; PRETY-PRINTER.
@@ -442,7 +444,7 @@
   (if (every #'listp (cdr exp))
       (format stream "~:<~W~^ ~:S~^ ~1I~_~@{~:<~@{~:S~^~:@_~}~:>~^~:@_~}~:>"
               exp)
-      (let((*print-pprint-dispatch* (copy-pprint-dispatch nil)))
+      (let ((*print-pprint-dispatch* (copy-pprint-dispatch nil)))
         (write exp :stream stream))))
 
 (set-pprint-dispatch '(cons (eql check-bnf)) 'pprint-check-bnf)
