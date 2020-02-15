@@ -474,16 +474,11 @@
 #?(pprint-check-bnf nil '(check-bnf nil not-list))
 => unspecified ; Depending on implementation.
 
-;;; CLISP breaks ANSI standard.
-;;; [pprint-newline](http://clhs.lisp.se/Body/f_ppr_nl.htm)
-;;; > When a line break is inserted by any type of conditional newline,
-;;;   any blanks that immediately precede the conditional newline are omitted from the output
+;;; [CLISP say](https://clisp.sourceforge.io/impnotes.html#clpp)
 
-#+clisp ; as guard.
-#?(length (format nil "~:<   ~:@_~:>" nil))
-:be-the (not (eql 1))
+;;; > The Lisp Pretty Printer implementation is not perfect yet.
 
-;;; Due to above reason, two tests below are ignored in CLISP since always fails.
+;;; So two tests below are ignored in CLISP.
 ;;; Fortunately this is just printing, not check-bnf feature itself.
 
 #-clisp
