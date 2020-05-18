@@ -1,4 +1,4 @@
-# CHECK-BNF 6.4.10
+# CHECK-BNF 6.5.3
 ## What is this?
 Macro arguments checker.
 
@@ -21,7 +21,7 @@ It helps the third person to understand your macro.
 
 ```lisp
 (defmacro defun (&whole whole name lambda-list &body body)
-  (check-bnf(:whole whole)
+  (check-bnf (:whole whole)
     ((name (or symbol setf-name))
      (setf-name ((eql setf) symbol)))
     ((lambda-list list)))
@@ -52,9 +52,9 @@ MIT
 SBCL
 
 ### Tested with
-* SBCL/2.0.0
-* CCL/1.11.5
-* ECL/16.1.3
+* SBCL/2.0.2
+* CCL/1.12
+* ECL/20.4.24
 * CLISP/2.49
 
 ## Installation
