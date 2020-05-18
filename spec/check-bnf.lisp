@@ -221,7 +221,7 @@
       ((a symbol))))
 :invokes-debugger syntax-error
 ,:test (lambda (condition)
-         (& (equal #.(format nil "a := symbol~2%~
+         (& (equal #.(format nil "A := SYMBOL~2%~
                              but \"not-symbol\", it is type-of ~s"
                              (type-of "not-symbol"))
                    (princ-to-string condition))))
@@ -232,8 +232,8 @@
       ((a symbol))))
 :invokes-debugger syntax-error
 ,:test (lambda (condition)
-         (& (equal #.(format nil "syntax-error in whole~2%~
-                             a := symbol~2%~
+         (& (equal #.(format nil "Syntax-error in WHOLE~2%~
+                             A := SYMBOL~2%~
                              but \"not-symbol\", it is type-of ~s~2%~
                              in ~s"
                              (type-of "not-symbol")
@@ -463,13 +463,13 @@
 
 ;;;; tests:
 #?(pprint-check-bnf nil '(check-bnf))
-:outputs "(check-bnf)"
+:outputs "(CHECK-BNF)"
 
 #?(pprint-check-bnf nil '(check-bnf nil))
-:outputs "(check-bnf ())"
+:outputs "(CHECK-BNF ())"
 
 #?(pprint-check-bnf nil '(check-bnf nil nil))
-:outputs "(check-bnf () ())"
+:outputs "(CHECK-BNF () ())"
 
 #?(pprint-check-bnf nil '(check-bnf nil not-list))
 => unspecified ; depending on implementation.
@@ -485,16 +485,16 @@
 #?(pprint-check-bnf nil '(check-bnf ()
                            ((a symbol))
                            ((b string))))
-:outputs "(check-bnf ()
-  ((a symbol))
-  ((b string)))"
+:outputs "(CHECK-BNF ()
+  ((A SYMBOL))
+  ((B STRING)))"
 
 #-clisp
 #?(pprint-check-bnf nil '(check-bnf ()
                            ((function-name (or name setf-name))
                             (name symbol)
                             (setf-name ((eql setf) name)))))
-:outputs "(check-bnf ()
-  ((function-name (or name setf-name))
-   (name symbol)
-   (setf-name ((eql setf) name))))"
+:outputs "(CHECK-BNF ()
+  ((FUNCTION-NAME (OR NAME SETF-NAME))
+   (NAME SYMBOL)
+   (SETF-NAME ((EQL SETF) NAME))))"
