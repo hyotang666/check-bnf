@@ -112,7 +112,9 @@
         (case mark
           ((#\? #\* #\+)
            (let ((name (symbol-name thing)))
-             (values (intern (subseq name 0 (1- (length name)))) mark)))
+             (values (intern (subseq name 0 (1- (length name)))
+                             (symbol-package thing))
+                     mark)))
           (otherwise (values thing nil))))))
 
 (defun or-formatter (form)
