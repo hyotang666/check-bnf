@@ -440,11 +440,25 @@
 ;;;; PRETY-PRINTER.
 
 (defun pprint-check-bnf (stream exp)
-  (setf stream (or stream *standard-output*))
-  (if (every #'listp (cdr exp))
-      (format stream "~:<~W~^ ~:S~^ ~1I~_~@{~:<~@{~:S~^~:@_~}~:>~^~:@_~}~:>"
-              exp)
-      (let ((*print-pprint-dispatch* (copy-pprint-dispatch nil)))
-        (write exp :stream stream))))
+  (funcall
+    (formatter
+     #.(apply #'concatenate 'string
+              (alexandria:flatten
+                (list "~:<" ; logical-block for check-bnf
+                      "~W~^ ~1I~@_" ; operator
+                      (list "~:<" ; options
+                            "~@{~W~^ ~@_~}" ; option body.
+                            "~:>~^ ~_")
+                      (list "~@{" ; def+
+                            (list "~:<~^" ; each definition
+                                  (list "~@{" ; clauses
+                                        (list "~:<~^" ; each clause.
+                                              "~@{~W~^ ~:_~}" ; clause body.
+                                              "~:>~^ ~_")
+                                        "~}")
+                                  "~:>~^~:@_")
+                            "~}")
+                      "~:>"))))
+    stream exp))
 
 (set-pprint-dispatch '(cons (eql check-bnf)) 'pprint-check-bnf)
