@@ -119,6 +119,7 @@
 
 (defun or-formatter (form)
   (typecase form
+    ((and symbol (not keyword)) (princ-to-string form))
     (atom (prin1-to-string form))
     ((cons (eql or) *)
      (format nil "[ ~{~A ~^| ~}]" (mapcar #'or-formatter (cdr form))))
