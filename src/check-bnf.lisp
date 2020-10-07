@@ -24,14 +24,21 @@
    (definitions :initform nil :initarg :definitions :reader bnf-definitions))
   (:report
    (lambda (condition stream)
-     (format stream "~@[Syntax-error in ~S~2%~]~A~%~?~@[~2%in ~S~]"
-             (car (whole-form<=syntax-error condition))
-             (format-definition
-               (definitions (cell-error-name condition)
-                            (bnf-definitions condition)))
+     (funcall
+       (formatter
+        #.(concatenate 'string "~<" ; pprint-logical-block
+                       "~@[Syntax-error in ~S~:@_~2I~:@_~]" ; header.
+                       "~/check-bnf:pprint-definitions/~I~:@_" ; body
+                       "~?" ; format-control
+                       "~@[~:@_~:@_in ~S~]" ; whole
+                       "~:>"))
+       stream
+       (list (car (whole-form<=syntax-error condition))
+             (definitions (cell-error-name condition)
+                          (bnf-definitions condition))
              (simple-condition-format-control condition)
              (simple-condition-format-arguments condition)
-             (whole-form<=syntax-error condition))))
+             (whole-form<=syntax-error condition)))))
   (:default-initargs :format-control ""))
 
 ;;;; SIGNALER
@@ -64,25 +71,35 @@
       (rec thing))
     (nreverse acc)))
 
-(defun format-definition (definitions)
+(defun pprint-definitions (stream definitions &rest noise)
+  (declare (ignore noise))
   (when (typep definitions '(cons (eql check-bnf) *))
     (setf definitions
             (mapcar
               (lambda (def) (cons (alexandria:ensure-car (car def)) (cdr def)))
               (cddr definitions))))
-  (format nil "~:{~VA := ~:[[ ~{~A~^ ~} ]~;~{~A~}~]~@[~A~]~%~}"
-          (let ((num
-                 (reduce #'max definitions
-                         :initial-value 0
-                         :key (alexandria:compose 'length 'string 'car))))
-            (mapcar
-              (lambda (definition)
-                (multiple-value-bind (name mark)
-                    (but-extended-marker (car definition))
-                  (let ((list (mapcar #'or-formatter (cdr definition))))
-                    (list num name (and list (null (cdr list))) ; one-element-p
-                          list mark))))
-              definitions))))
+  (funcall
+    (formatter
+     #.(apply #'concatenate 'string
+              (alexandria:flatten
+                (list "~<" ; pprint-logical-block
+                      (list "~{" ; each line.
+                            "~VA := ~:[[ ~{~A~^ ~} ]~;~{~A~}~]~@[~A~]~:@_"
+                            "~}")
+                      "~:>"))))
+    stream
+    (let ((num
+           (reduce #'max definitions
+                   :initial-value 0
+                   :key (alexandria:compose 'length 'string 'car))))
+      (mapcar
+        (lambda (definition)
+          (multiple-value-bind (name mark)
+              (but-extended-marker (car definition))
+            (let ((list (mapcar #'or-formatter (cdr definition))))
+              (list num name (and list (null (cdr list))) ; one-element-p
+                    list mark))))
+        definitions))))
 
 (declaim
  (ftype (function (t) (values (or null symbol) (or null character) &optional))
@@ -220,7 +237,7 @@
                   (unless (zerop mod)
                     (syntax-error ',name
                                   "Length mismatch. Lack last ~{~S~^ ~} of ~S~@?"
-                                  (subseq ',spec+ mod) ',spec+ "~%~S"
+                                  (subseq ',spec+ mod) ',spec+ "~:@_~S"
                                   ,name)))))
           (loop :for ,gsyms :on ,name
                      :by ,(let ((length (length spec+)))
@@ -236,7 +253,10 @@
                           (loop :for (nil c) :on args :by #'cddr
                                 :when c
                                   :do (syntax-error ',name "but ~{~S~^ ~}~@?"
-                                                    args "~%in ~S" ,name)))
+                                                    (loop :for arg :in args
+                                                               :by #'cddr
+                                                          :collect arg)
+                                                    "~2I~:@_in ~S~I" ,name)))
                       ,@forms))))))
 
 (defun <local-check-form> (name var spec)
@@ -384,7 +404,8 @@
                           (concatenate 'string
                                        (simple-condition-format-control c)
                                        "~@?")
-                          (simple-condition-format-arguments c) "~%in ~S" arg))
+                          (simple-condition-format-arguments c) "~:@_in ~S"
+                          arg))
           (:no-error (&rest args)
             (declare (ignore args)) nil)))))
 
@@ -398,7 +419,8 @@
                           (concatenate 'string
                                        (simple-condition-format-control c)
                                        "~@?")
-                          (simple-condition-format-arguments c) "~%in ~S" arg))
+                          (simple-condition-format-arguments c) "~:@_in ~S"
+                          arg))
           (:no-error (&rest args)
             (declare (ignore args)) nil)))))
 
