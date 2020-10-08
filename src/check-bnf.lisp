@@ -448,7 +448,7 @@
 (defun +-checker (name cont)
   (lambda (arg)
     (if (atom arg)
-        (syntax-error name "Require CONS but ~S" name)
+        (syntax-error name "Require CONS but ~S" arg)
         (handler-case (mapc cont arg)
           (syntax-error (c)
             (syntax-error name
