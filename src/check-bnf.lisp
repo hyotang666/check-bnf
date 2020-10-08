@@ -522,6 +522,7 @@
 ;;;; PRETY-PRINTER.
 
 (defun pprint-check-bnf (stream exp)
+  (setf stream (or stream *standard-output*))
   (funcall
     (formatter
      #.(apply #'concatenate 'string
