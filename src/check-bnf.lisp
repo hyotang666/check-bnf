@@ -134,7 +134,8 @@
     (let ((num
            (reduce #'max definitions
                    :initial-value 0
-                   :key (alexandria:compose 'length 'string 'car))))
+                   :key (alexandria:compose 'length 'string
+                                            'but-extended-marker 'car))))
       (mapcar
         (lambda (definition)
           (multiple-value-bind (name mark)
