@@ -113,14 +113,15 @@
       (rec thing))
     (nreverse acc)))
 
+(defun pprint-bnf (stream exp &rest noise)
+  (declare (ignore noise))
+  (setf stream (or stream *standard-output*))
+  (funcall (formatter "~<~@{~/check-bnf:pprint-definitions/~^~:@_~}~:>") stream
+           (cddr exp)))
+
 (defun pprint-definitions (stream definitions &rest noise)
   (declare (ignore noise))
   (setf stream (or stream *standard-output*))
-  (when (typep definitions '(cons (eql check-bnf) *))
-    (setf definitions
-            (mapcar
-              (lambda (def) (cons (alexandria:ensure-car (car def)) (cdr def)))
-              (cddr definitions))))
   (funcall
     (formatter
      #.(apply #'concatenate 'string
