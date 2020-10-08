@@ -51,7 +51,46 @@
          :whole *whole*
          :definitions *bnf*))
 
-;;;; FORMATTER
+;;;; PRETTY-PRINTER.
+
+(defun pprint-def-elt (stream exp &rest noise)
+  (declare (ignore noise))
+  (etypecase exp
+    ((and symbol (not keyword)) (princ exp stream))
+    (atom (prin1 exp stream))
+    ((cons (eql or) *)
+     (if (and exp (null (cddr exp))) ; As one-elemen-p
+         (pprint-def-elt stream (cadr exp))
+         (funcall
+           (formatter
+            #.(apply #'concatenate 'string
+                     (alexandria:flatten
+                       (list "~<" ; pprint-logical-block.
+                             "[" ; prefix.
+                             (list "~@{" ; iterate.
+                                   " ~/check-bnf:pprint-def-elt/ ~_~^|" ; each
+                                                                        ; elt.
+                                   "~}")
+                             "]" ; suffix.
+                             "~:>"))))
+           stream (cdr exp))))
+    (cons (pprint-def-clause stream exp))))
+
+(defun pprint-def-clause (stream exp &rest noise)
+  (declare (ignore noise))
+  (if (atom exp)
+      (write exp :stream stream)
+      (funcall
+        (formatter
+         #.(apply #'concatenate 'string
+                  (alexandria:flatten
+                    (list "~{" ; iterate.
+                          (list "~:<" ; pprint-logical-block
+                                "~@{~/check-bnf:pprint-def-elt/~^ ~}" ; each
+                                                                      ; element.
+                                "~:>")
+                          "~}"))))
+        stream exp)))
 
 (defun definitions (thing bnf)
   (let ((acc))
@@ -85,7 +124,9 @@
                 (list "~<" ; pprint-logical-block
                       (list "~@{" ; definitions
                             (list "~{" ; each line.
-                                  "~VA := ~:[[ ~{~A~^ ~} ]~;~{~A~}~]~@[~A~]~:@_"
+                                  "~VA := " ; name.
+                                  "~/check-bnf:pprint-def-clause/" ; def-clause.
+                                  "~@[~A~]~:@_" ; extended marker.
                                   "~}")
                             "~}")
                       "~:>"))))
@@ -98,9 +139,7 @@
         (lambda (definition)
           (multiple-value-bind (name mark)
               (but-extended-marker (car definition))
-            (let ((list (mapcar #'or-formatter (cdr definition))))
-              (list num name (and list (null (cdr list))) ; one-element-p
-                    list mark))))
+            (list num name (cdr definition) mark)))
         definitions))))
 
 (declaim
@@ -118,14 +157,6 @@
                              (symbol-package thing))
                      mark)))
           (otherwise (values thing nil))))))
-
-(defun or-formatter (form)
-  (typecase form
-    ((and symbol (not keyword)) (princ-to-string form))
-    (atom (prin1-to-string form))
-    ((cons (eql or) *)
-     (format nil "[ ~{~A ~^| ~}]" (mapcar #'or-formatter (cdr form))))
-    (cons (format nil "(~{~A~^ ~})" (mapcar #'or-formatter form)))))
 
 (defun extended-marker (name)
   (let ((char (char (symbol-name name) (1- (length (symbol-name name))))))
