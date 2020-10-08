@@ -292,12 +292,12 @@
       ((a symbol))))
 :invokes-debugger syntax-error
 ,:test (lambda (condition)
-         (& (equal #.(format nil "~@<Syntax-error in WHOLE~:@_~2I~:@_~
-                             A := SYMBOL~2%~
-                             but \"not-symbol\", it is type-of ~s~2%~
-                             in ~s~:>"
-                             (type-of "not-symbol")
-                             '(whole ("not-symbol")))
+         (& (equal (format nil "Syntax-error in WHOLE~2%  ~
+                           A := SYMBOL~2%~
+                           but \"not-symbol\", it is type-of ~s~2%~
+                           in ~s"
+                           (type-of "not-symbol")
+                           '(whole ("not-symbol")))
                    (princ-to-string condition))))
 
 ; note! clisp specific bug(?).
