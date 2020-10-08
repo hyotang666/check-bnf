@@ -474,13 +474,23 @@
     (check-bnf ()
       ((var (or string name*))
        (name symbol))))
-:signals syntax-error
+:invokes-debugger syntax-error
+,:test (lambda (condition)
+         (& (string= (princ-to-string condition)
+                     (format nil "VAR  := [ STRING | NAME* ]~%~
+                             NAME := SYMBOL~2%~
+                             but :NOT-LIST"))))
 
 #?(let ((var '("string" "list")))
     (check-bnf ()
       ((var (or string name*))
        (name symbol))))
-:signals syntax-error
+:invokes-debugger syntax-error
+,:test (lambda (condition)
+         (& (string= (princ-to-string condition)
+                     (format nil "VAR  := [ STRING | NAME* ]~%~
+                             NAME := SYMBOL~2%~
+                             but (\"string\" \"list\")"))))
 
 ;; right side xxx?
 #?(let ((ll nil))
@@ -499,13 +509,21 @@
     (check-bnf ()
       ((ll (var?))
        (var symbol))))
-:signals syntax-error
+:invokes-debugger syntax-error
+,:test (lambda (condition)
+         (& (string= (princ-to-string condition)
+                     (format nil "VAR := SYMBOL~2%~
+                             Length mismatch. (VAR?) but (VAR TOO MUCH)"))))
 
 #?(let ((ll "not symbol"))
     (check-bnf ()
       ((ll (var?))
        (var symbol))))
-:signals syntax-error
+:invokes-debugger syntax-error
+,:test (lambda (condition)
+         (& (string= (princ-to-string condition)
+                     (format nil "VAR := SYMBOL~2%~
+                             Require CONS but \"not symbol\""))))
 
 (requirements-about expression :doc-type type)
 ;;;; description:
