@@ -17,7 +17,12 @@
 #?(let ((var "string"))
     (check-bnf ()
       ((var symbol))))
-:signals syntax-error
+:invokes-debugger syntax-error
+,:test (lambda (condition)
+         (& (string= (princ-to-string condition)
+                     (format nil "VAR := SYMBOL~2%~
+                             but \"string\", it is type-of ~S"
+                             (type-of "string")))))
 
 ; You can check some place at once.
 #?(let ((a 'symbol)
@@ -112,7 +117,12 @@
 #?(let ((var* '("string")))
     (check-bnf ()
       ((var* symbol))))
-:signals syntax-error
+:invokes-debugger syntax-error
+,:test (lambda (condition)
+         (& (string= (princ-to-string condition)
+                     (format nil "VAR := SYMBOL~2%~
+                             but \"string\", it is type-of ~S~%  in (\"string\")"
+                             (type-of "string")))))
 
 #?(let ((var* :not-list))
     (check-bnf ()
