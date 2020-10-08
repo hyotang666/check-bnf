@@ -353,8 +353,17 @@
                   (let ((elt (car ,sl)))
                     (if (vectorp elt)
                         (case (extended-marker (elt elt 0))
-                          (#\? (ignore-errors (local-check ,vl elt)))
-                          (otherwise (local-check ,vl elt)))
+                          ((#\? #\*) (ignore-errors (local-check ,vl elt)))
+                          (otherwise
+                           (syntax-error ',spec
+                                         "Length mismatch. Lack last ~{~S~^ ~} of ~S"
+                                         (mapcar
+                                           (lambda (x)
+                                             (if (vectorp x)
+                                                 (elt x 0)
+                                                 x))
+                                           ,sl)
+                                         ',spec)))
                         (case (extended-marker (car ,sl))
                           ((#\? #\*) (local-check ,vl (car ,sl)))
                           (otherwise
