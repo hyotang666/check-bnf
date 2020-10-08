@@ -288,10 +288,15 @@
                         (lambda (&rest args)
                           (loop :for (nil c) :on args :by #'cddr
                                 :when c
-                                  :do (syntax-error ',name "but ~{~S~^ ~}~@?"
-                                                    (loop :for arg :in args
+                                  :do (syntax-error ',name
+                                                    "but ~{~S ; ~?~^ ~}~@?"
+                                                    (loop :for (arg c) :on args
                                                                :by #'cddr
-                                                          :collect arg)
+                                                          :collect arg
+                                                          :collect (simple-condition-format-control
+                                                                     c)
+                                                          :collect (simple-condition-format-arguments
+                                                                     c))
                                                     "~2I~:@_in ~S~I" ,name)))
                       ,@forms))))))
 
