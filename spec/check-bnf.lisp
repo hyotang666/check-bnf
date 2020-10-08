@@ -120,7 +120,7 @@
 :invokes-debugger syntax-error
 ,:test (lambda (condition)
          (& (string= (princ-to-string condition)
-                     (format nil "VAR := SYMBOL~2%~
+                     (format nil "VAR := SYMBOL*~2%~
                              but \"string\", it is type-of ~S~%  in (\"string\")"
                              (type-of "string")))))
 

@@ -2,7 +2,7 @@
 (in-package :asdf)
 (defsystem "check-bnf.test"
   :version
-  "0.3.7"
+  "0.3.8"
   :depends-on
   (:jingoh "check-bnf")
   :components
