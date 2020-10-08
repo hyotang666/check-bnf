@@ -165,12 +165,23 @@
 #?(let ((var* '(:key 1 "not-key" 2)))
     (check-bnf ()
       ((var* keyword integer))))
-:signals syntax-error
+:invokes-debugger syntax-error
+,:test (lambda (condition)
+         (& (string= (princ-to-string condition)
+                     (format nil "VAR := KEYWORD INTEGER*~2%~
+                             but \"not-key\", it is type-of ~S~%  ~
+                             in (:KEY 1 \"not-key\" 2)"
+                             (type-of "not-key")))))
 
 #?(let ((var* '(not "ballanced" plist)))
     (check-bnf ()
       ((var* keyword string))))
-:signals syntax-error
+:invokes-debugger syntax-error
+,:test (lambda (condition)
+         (& (string= (princ-to-string condition)
+                     (format nil "VAR := KEYWORD STRING*~2%~
+                             Length mismatch. Lack last STRING of (KEYWORD STRING)~%~
+                             (NOT \"ballanced\" PLIST)"))))
 
 ; e.g. specify for alist.
 #?(let ((var* '((:key "value") (:key2 "value2"))))
@@ -181,17 +192,32 @@
 #?(let ((var* '((:key "value") (:key2 :not-string))))
     (check-bnf ()
       ((var* (keyword string)))))
-:signals syntax-error
+:invokes-debugger syntax-error
+,:test (lambda (condition)
+         (& (string= (princ-to-string condition)
+                     (format nil "VAR := KEYWORD STRING*~2%~
+                             but :NOT-STRING, it is type-of KEYWORD~%  ~
+                             in ((:KEY \"value\") (:KEY2 :NOT-STRING))"))))
 
 #?(let ((var* '((:key "value") (:not "ballanced" clause))))
     (check-bnf ()
       ((var* (keyword string)))))
-:signals syntax-error
+:invokes-debugger syntax-error
+,:test (lambda (condition)
+         (& (string= (princ-to-string condition)
+                     (format nil "VAR := KEYWORD STRING*~2%~
+                             Length mismatch. (KEYWORD STRING) but (:NOT \"ballanced\" CLAUSE)~%  ~
+                             in ((:KEY \"value\") (:NOT \"ballanced\" CLAUSE))"))))
 
 #?(let ((var* '((:key "value") (:not-ballanced))))
     (check-bnf ()
       ((var* (keyword string)))))
-:signals syntax-error
+:invokes-debugger syntax-error
+,:test (lambda (condition)
+         (& (string= (princ-to-string condition)
+                     (format nil "VAR := KEYWORD STRING*~2%~
+                             Length mismatch. Lack last STRING of (KEYWORD STRING)~%  ~
+                             in ((:KEY \"value\") (:NOT-BALLANCED))"))))
 
 ; of course dotted are valid.
 #?(let ((var* '((:key . "value"))))
@@ -209,17 +235,31 @@
 #?(let ((var+ '()))
     (check-bnf ()
       ((var+ integer))))
-:signals syntax-error
+:invokes-debugger syntax-error
+,:test (lambda (condition)
+         (& (string= (princ-to-string condition)
+                     (format nil "VAR := INTEGER+~2%~
+                             Require CONS but NIL"))))
 
 #?(let ((var+ '("not-integer")))
     (check-bnf ()
       ((var+ integer))))
-:signals syntax-error
+:invokes-debugger syntax-error
+,:test (lambda (condition)
+         (& (string= (princ-to-string condition)
+                     (format nil "VAR := INTEGER+~2%~
+                             but \"not-integer\", it is type-of ~S~%  ~
+                             in (\"not-integer\")"
+                             (type-of "not-integer")))))
 
 #?(let ((var+ :not-cons))
     (check-bnf ()
       ((var+ integer))))
-:signals syntax-error
+:invokes-debugger syntax-error
+,:test (lambda (condition)
+         (& (string= (princ-to-string condition)
+                     (format nil "VAR := INTEGER+~2%~
+                             Require CONS but :NOT-CONS"))))
 
 #+syntax
 (check-bnf (&key ((:whole whole?))) &rest def+) ; => result
@@ -333,14 +373,25 @@
 #?(let ((option "not-symbol"))
     (check-bnf ()
       ((option (or null symbol)))))
-:signals syntax-error
+:invokes-debugger syntax-error
+,:test (lambda (condition)
+         (& (string= (princ-to-string condition)
+                     (format nil "OPTION := [ NULL | SYMBOL ]~2%~
+                             but \"not-symbol\", it is type-of ~S"
+                             (type-of "not-symbol")))))
 
 #?(let ((function-name "not function-name"))
     (check-bnf ()
       ((function-name (or name setf-name))
        (name symbol)
        (setf-name ((eql setf) name)))))
-:signals syntax-error
+:invokes-debugger syntax-error
+,:test (lambda (condition)
+         (& (string= (princ-to-string condition)
+                     (format nil "FUNCTION-NAME := [ NAME | SETF-NAME ]~%~
+                             NAME          := SYMBOL~%~
+                             SETF-NAME     := (EQL SETF) NAME~2%~
+                             but \"not function-name\""))))
 
 ; to check optional value in list, you can write like below.
 #?(let ((args '(option and others)))
