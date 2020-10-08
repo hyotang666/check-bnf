@@ -24,21 +24,22 @@
    (definitions :initform nil :initarg :definitions :reader bnf-definitions))
   (:report
    (lambda (condition stream)
-     (funcall
-       (formatter
-        #.(concatenate 'string "~<" ; pprint-logical-block
-                       "~@[Syntax-error in ~S~:@_~2I~:@_~]" ; header.
-                       "~/check-bnf:pprint-definitions/~I~:@_" ; body
-                       "~?" ; format-control
-                       "~@[~:@_~:@_in ~S~]" ; whole
-                       "~:>"))
-       stream
-       (list (car (whole-form<=syntax-error condition))
-             (definitions (cell-error-name condition)
-                          (bnf-definitions condition))
-             (simple-condition-format-control condition)
-             (simple-condition-format-arguments condition)
-             (whole-form<=syntax-error condition)))))
+     (let ((*print-pretty* t))
+       (funcall
+         (formatter
+          #.(concatenate 'string "~<" ; pprint-logical-block
+                         "~@[Syntax-error in ~S~:@_~2I~:@_~]" ; header.
+                         "~/check-bnf:pprint-definitions/~I~:@_" ; body
+                         "~?" ; format-control
+                         "~@[~:@_~:@_in ~S~]" ; whole
+                         "~:>"))
+         stream
+         (list (car (whole-form<=syntax-error condition))
+               (definitions (cell-error-name condition)
+                            (bnf-definitions condition))
+               (simple-condition-format-control condition)
+               (simple-condition-format-arguments condition)
+               (whole-form<=syntax-error condition))))))
   (:default-initargs :format-control ""))
 
 ;;;; SIGNALER
