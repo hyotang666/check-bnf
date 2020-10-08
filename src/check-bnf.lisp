@@ -58,7 +58,7 @@
   (etypecase exp
     ((and symbol (not keyword)) (princ exp stream))
     (atom (prin1 exp stream))
-    ((cons (eql or) *)
+    ((cons (member member or) *)
      (if (and exp (null (cddr exp))) ; As one-elemen-p
          (pprint-def-elt stream (cadr exp))
          (funcall
@@ -85,11 +85,7 @@
          #.(apply #'concatenate 'string
                   (alexandria:flatten
                     (list "~{" ; iterate.
-                          (list "~:<" ; pprint-logical-block
-                                "~@{~/check-bnf:pprint-def-elt/~^ ~}" ; each
-                                                                      ; element.
-                                "~:>")
-                          "~}"))))
+                          "~/check-bnf:pprint-def-elt/~^ " "~^ ~}"))))
         stream exp)))
 
 (defun definitions (thing bnf)
