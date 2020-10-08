@@ -1,4 +1,4 @@
-# CHECK-BNF 6.5.3
+# CHECK-BNF 6.7.17
 ## What is this?
 Macro arguments checker.
 
@@ -52,10 +52,22 @@ MIT
 SBCL
 
 ### Tested with
-* SBCL/2.0.2
+* SBCL/2.0.9
 * CCL/1.12
 * ECL/20.4.24
 * CLISP/2.49
 
+### Known issue.
+#### CLISP
+In clisp, some tests are failed.
+[CLISP say](https://clisp.sourceforge.io/impnotes.html#clpp)
+
+> The Lisp Pretty Printer implementation is not perfect yet.
+
 ## Installation
 
+quicklisp supported.
+
+```lisp
+* (ql:quickload :check-bnf)
+```
