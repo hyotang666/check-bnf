@@ -370,6 +370,8 @@
                            (syntax-error ',spec
                                          "Length mismatch. Lack last ~{~S~^ ~} of ~S"
                                          ,sl ',spec))))))
+                 ((atom (cons * null))
+                  (syntax-error ',spec "Require CONS but ~S" ,vl))
                  (otherwise
                   (syntax-error ',spec "Length mismatch. ~S but ~S" ',spec
                                 ,var))))
