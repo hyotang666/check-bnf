@@ -211,19 +211,26 @@
     (let ((*whole* whole))
       (def+ def+)))
   ;; Body of CHECK-BNF.
-  `(let ((*whole* ,whole?))
-     ,@(loop :for def :in def+
-             :for *bnf*
-                  = (mapcar
-                      (lambda (clause)
-                        (cons (alexandria:ensure-car (car clause))
-                              (cdr clause)))
-                      def)
-             :for (fun-name var-name) = (alexandria:ensure-list (caar def))
-             :collect `(let ((*bnf* ',*bnf*))
-                         (labels ,(loop :for clause :in def
-                                        :collect (<local-fun> clause))
-                           (,fun-name ,(or var-name fun-name)))))))
+  (let ((forms
+         (loop :for def :in def+
+               :for *bnf*
+                    = (mapcar
+                        (lambda (clause)
+                          (cons (alexandria:ensure-car (car clause))
+                                (cdr clause)))
+                        def)
+               :for (fun-name var-name) = (alexandria:ensure-list (caar def))
+               :if (or (and (cddar def) (not (every #'t-p (cdar def))))
+                       (find (extended-marker fun-name) "*+")
+                       (and (null (cddar def)) (not (t-p (cadar def)))))
+                 :collect `(let ((*whole* ,whole?) (*bnf* ',*bnf*))
+                             (labels ,(loop :for clause :in def
+                                            :collect (<local-fun> clause))
+                               (,fun-name ,(or var-name fun-name)))))))
+    (typecase forms
+      (null forms)
+      ((cons * null) (car forms))
+      (otherwise `(progn ,@forms)))))
 
 (defun <local-fun> (clause)
   (destructuring-bind

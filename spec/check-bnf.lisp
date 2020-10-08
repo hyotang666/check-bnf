@@ -36,71 +36,34 @@
 ; Efficient code is generated.
 #?(check-bnf ()
     ((a t)))
-:expanded-to
-(let ((check-bnf::*whole* nil))
-  (let ((check-bnf::*bnf* '((a t))))
-    (labels ((a (a)
-               (declare (ignore a))
-               nil))
-      (a a))))
+:expanded-to NIL
 
 #?(check-bnf ()
     ((a* t)))
 :expanded-to
-(let ((check-bnf::*whole* nil))
-  (let ((check-bnf::*bnf* '((a* t))))
-    (labels ((a* (a*)
-              (if (typep a* '(and atom (not null)))
-                  (syntax-error 'a* "Require LIST but ~S." a*)
-                  nil)))
-      (a* a*))))
+(let ((check-bnf::*whole* nil)
+      (check-bnf::*bnf* '((a* t))))
+  (labels ((a* (a*)
+               (if (typep a* '(and atom (not null)))
+                 (syntax-error 'a* "Require LIST but ~S." a*)
+                 nil)))
+    (a* a*)))
 
 ; Also it occur in OR form.
 #?(check-bnf ()
     ((a (or symbol t string))))
-:expanded-to
-(let ((check-bnf::*whole* nil))
-  (let ((check-bnf::*bnf* '((a (or symbol t string)))))
-    (labels ((a (a)
-               (declare (ignore a))
-               nil))
-      (a a))))
+:expanded-to NIL
 
 #?(check-bnf ()
     ((a (or symbol b string))
      (b t)))
-:expanded-to
-(let ((check-bnf::*whole* nil))
-  (let ((check-bnf::*bnf* '((a (or symbol b string))
-                             (b t))))
-    (labels ((a (a)
-               (declare (ignore a))
-               nil)
-             (b (b)
-               (declare (ignore b))
-               nil))
-      (a a))))
+:expanded-to NIL
 
 #?(check-bnf ()
     ((a (or b c))
      (b integer)
      (c t)))
-:expanded-to
-(let ((check-bnf::*whole* nil))
-  (let ((check-bnf::*bnf* '((a (or b c))
-                             (b integer)
-                             (c t))))
-    (labels ((a (a)
-               (declare (ignore a))
-               nil)
-             (b (b)
-               (unless (typep b 'integer)
-                 (syntax-error 'b "but ~S, it is type-of ~S"
-                                b (type-of b))))
-             (c (c)
-               (declare (ignore c))
-               nil))
-      (a a))))
+:expanded-to NIL
 
 ; When you know VAR is list, and it has 0 or more elt. (a.k.a. *)
 ; You can write like below.
