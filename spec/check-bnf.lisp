@@ -195,7 +195,7 @@
 :invokes-debugger syntax-error
 ,:test (lambda (condition)
          (& (string= (princ-to-string condition)
-                     (format nil "VAR := KEYWORD STRING*~2%~
+                     (format nil "VAR := (KEYWORD STRING)*~2%~
                              but :NOT-STRING, it is type-of KEYWORD~%  ~
                              in ((:KEY \"value\") (:KEY2 :NOT-STRING))"))))
 
@@ -205,7 +205,7 @@
 :invokes-debugger syntax-error
 ,:test (lambda (condition)
          (& (string= (princ-to-string condition)
-                     (format nil "VAR := KEYWORD STRING*~2%~
+                     (format nil "VAR := (KEYWORD STRING)*~2%~
                              Length mismatch. (KEYWORD STRING) but (:NOT \"ballanced\" CLAUSE)~%  ~
                              in ((:KEY \"value\") (:NOT \"ballanced\" CLAUSE))"))))
 
@@ -215,7 +215,7 @@
 :invokes-debugger syntax-error
 ,:test (lambda (condition)
          (& (string= (princ-to-string condition)
-                     (format nil "VAR := KEYWORD STRING*~2%~
+                     (format nil "VAR := (KEYWORD STRING)*~2%~
                              Length mismatch. Lack last STRING of (KEYWORD STRING)~%  ~
                              in ((:KEY \"value\") (:NOT-BALLANCED))"))))
 
@@ -390,7 +390,7 @@
          (& (string= (princ-to-string condition)
                      (format nil "FUNCTION-NAME := [ NAME | SETF-NAME ]~%~
                              NAME          := SYMBOL~%~
-                             SETF-NAME     := (EQL SETF) NAME~2%~
+                             SETF-NAME     := ((EQL SETF) NAME)~2%~
                              but \"not function-name\""))))
 
 ; to check optional value in list, you can write like below.

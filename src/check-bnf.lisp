@@ -77,7 +77,9 @@
                              "]" ; suffix.
                              "~:>"))))
            stream (cdr exp))))
-    (cons (pprint-def-clause stream exp))))
+    (cons
+     (funcall (formatter "~:<~@{~/check-bnf:pprint-def-elt/~^ ~_~}~:>") stream
+              exp))))
 
 (defun pprint-def-clause (stream exp &rest noise)
   (declare (ignore noise))
