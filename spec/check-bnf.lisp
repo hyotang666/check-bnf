@@ -127,7 +127,11 @@
 #?(let ((var* :not-list))
     (check-bnf ()
       ((var* symbol))))
-:signals syntax-error
+:invokes-debugger syntax-error
+,:test (lambda (condition)
+         (& (string= (princ-to-string condition)
+                     (format nil "VAR := SYMBOL*~2%~
+                             Require LIST but :NOT-LIST."))))
 
 ; When expected T, efficient code is generated.
 #?(let ((option* ()))
@@ -150,7 +154,13 @@
 #?(let ((var* '(:key 2 :key2 "not integer")))
     (check-bnf ()
       ((var* keyword integer))))
-:signals syntax-error
+:invokes-debugger syntax-error
+,:test (lambda (condition)
+         (& (string= (princ-to-string condition)
+                     (format nil "VAR := KEYWORD INTEGER*~2%~
+                             but \"not integer\", it is type-of ~S~%  ~
+                             in (:KEY 2 :KEY2 \"not integer\")"
+                             (type-of "not integer")))))
 
 #?(let ((var* '(:key 1 "not-key" 2)))
     (check-bnf ()
