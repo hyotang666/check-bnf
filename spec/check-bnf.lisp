@@ -413,7 +413,13 @@
       ((args (option? other*))
        (option? (eql option))
        (other* symbol))))
-:signals syntax-error
+:invokes-debugger syntax-error
+,:test (lambda (condition)
+         (& (string= (princ-to-string condition)
+                     (format nil "OTHER := SYMBOL*~2%~
+                             but \"not option nor other*\", it is type-of ~S~%  ~
+                             in (\"not option nor other*\" AND OTHERS)"
+                             (type-of "not option nor other*")))))
 
 ;;;; exceptional-situations:
 ; every name should not conflicts cl symbol.
@@ -439,7 +445,11 @@
     (check-bnf ()
       ((var (symbol symbol required))
        (required keyword))))
-:signals syntax-error
+:invokes-debugger syntax-error
+,:test (lambda (condition)
+         (& (string= (princ-to-string condition)
+                     (format nil "REQUIRED := KEYWORD~2%~
+                             Length mismatch. Lack last REQUIRED of (SYMBOL SYMBOL REQUIRED)"))))
 
 ;; right side xxx*
 #?(let ((var '(symbol)))
