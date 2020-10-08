@@ -83,8 +83,10 @@
      #.(apply #'concatenate 'string
               (alexandria:flatten
                 (list "~<" ; pprint-logical-block
-                      (list "~{" ; each line.
-                            "~VA := ~:[[ ~{~A~^ ~} ]~;~{~A~}~]~@[~A~]~:@_"
+                      (list "~@{" ; definitions
+                            (list "~{" ; each line.
+                                  "~VA := ~:[[ ~{~A~^ ~} ]~;~{~A~}~]~@[~A~]~:@_"
+                                  "~}")
                             "~}")
                       "~:>"))))
     stream
