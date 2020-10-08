@@ -58,6 +58,7 @@
   (etypecase exp
     ((and symbol (not keyword)) (princ exp stream))
     (atom (prin1 exp stream))
+    ((cons (member eql) *) (prin1 exp stream))
     ((cons (member member or) *)
      (if (and exp (null (cddr exp))) ; As one-elemen-p
          (pprint-def-elt stream (cadr exp))
