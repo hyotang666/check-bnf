@@ -85,7 +85,8 @@
          #.(apply #'concatenate 'string
                   (alexandria:flatten
                     (list "~{" ; iterate.
-                          "~/check-bnf:pprint-def-elt/~^ " "~^ ~}"))))
+                          "~/check-bnf:pprint-def-elt/~^ " ; each elt.
+                          "~}"))))
         stream exp)))
 
 (defun definitions (thing bnf)
