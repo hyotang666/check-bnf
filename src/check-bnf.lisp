@@ -219,11 +219,11 @@
                         (cons (alexandria:ensure-car (car clause))
                               (cdr clause)))
                       def)
-             :for (name arg) = (alexandria:ensure-list (caar def))
+             :for (fun-name var-name) = (alexandria:ensure-list (caar def))
              :collect `(let ((*bnf* ',*bnf*))
                          (labels ,(loop :for clause :in def
                                         :collect (<local-fun> clause))
-                           (,name ,(or arg name)))))))
+                           (,fun-name ,(or var-name fun-name)))))))
 
 (defun <local-fun> (clause)
   (destructuring-bind
