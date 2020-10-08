@@ -55,6 +55,7 @@
 
 (defun pprint-def-elt (stream exp &rest noise)
   (declare (ignore noise))
+  (setf stream (or stream *standard-output*))
   (etypecase exp
     ((and symbol (not keyword)) (princ exp stream))
     (atom (prin1 exp stream))
@@ -79,6 +80,7 @@
 
 (defun pprint-def-clause (stream exp &rest noise)
   (declare (ignore noise))
+  (setf stream (or stream *standard-output*))
   (if (atom exp)
       (write exp :stream stream)
       (funcall
@@ -110,6 +112,7 @@
 
 (defun pprint-definitions (stream definitions &rest noise)
   (declare (ignore noise))
+  (setf stream (or stream *standard-output*))
   (when (typep definitions '(cons (eql check-bnf) *))
     (setf definitions
             (mapcar
