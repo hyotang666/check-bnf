@@ -164,7 +164,7 @@
 
 ;;;; TYPES
 
-(deftype type-specifier () t)
+(deftype type-specifier () '(or symbol cons))
 
 (deftype expression () t)
 
