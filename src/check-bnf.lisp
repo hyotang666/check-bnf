@@ -288,11 +288,9 @@
                         (lambda (&rest args)
                           (loop :for (nil c) :on args :by #'cddr
                                 :when c
-                                  :do (syntax-error ',name
-                                                    "but ~{~S ; ~?~^ ~}~@?"
-                                                    (loop :for (arg c) :on args
+                                  :do (syntax-error ',name "~{~?~^ ~}~@?"
+                                                    (loop :for (nil c) :on args
                                                                :by #'cddr
-                                                          :collect arg
                                                           :collect (simple-condition-format-control
                                                                      c)
                                                           :collect (simple-condition-format-arguments
