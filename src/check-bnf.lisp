@@ -356,7 +356,12 @@
                         (case (extended-marker (elt elt 0))
                           (#\? (ignore-errors (local-check ,vl elt)))
                           (otherwise (local-check ,vl elt)))
-                        (local-check ,vl (car ,sl)))))
+                        (case (extended-marker (car ,sl))
+                          ((#\? #\*) (local-check ,vl (car ,sl)))
+                          (otherwise
+                           (syntax-error ',spec
+                                         "Length mismatch. Lack last ~{~S~^ ~} of ~S"
+                                         ,sl ',spec))))))
                  (otherwise
                   (syntax-error ',spec "Length mismatch. ~S but ~S" ',spec
                                 ,var))))
