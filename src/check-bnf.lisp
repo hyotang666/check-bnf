@@ -119,6 +119,11 @@
   (funcall (formatter "~<~@{~/check-bnf:pprint-definitions/~^~:@_~}~:>") stream
            (cddr exp)))
 
+(defmacro doc (form)
+  (with-output-to-string (s)
+    (let ((*print-pretty* t))
+      (pprint-bnf s form))))
+
 (defun pprint-definitions (stream definitions &rest noise)
   (declare (ignore noise))
   (setf stream (or stream *standard-output*))
