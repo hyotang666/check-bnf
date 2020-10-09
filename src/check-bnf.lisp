@@ -116,13 +116,15 @@
 (defun pprint-bnf (stream exp &rest noise)
   (declare (ignore noise))
   (setf stream (or stream *standard-output*))
-  (funcall (formatter "~<~@{~/check-bnf:pprint-definitions/~^~:@_~}~:>") stream
-           (cddr exp)))
+  (if (atom exp)
+      (princ exp stream)
+      (funcall (formatter "~<~@{~/check-bnf:pprint-definitions/~^~:@_~}~:>")
+               stream (cddr exp))))
 
-(defmacro doc (form)
+(defmacro doc (&rest forms)
   (with-output-to-string (s)
     (let ((*print-pretty* t))
-      (pprint-bnf s form))))
+      (funcall (formatter "~<~@{~/check-bnf:pprint-bnf/~^~:@_~}~:>") s forms))))
 
 (defun pprint-definitions (stream definitions &rest noise)
   (declare (ignore noise))
