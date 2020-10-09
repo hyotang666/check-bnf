@@ -4,6 +4,7 @@
   (:use :cl)
   (:export ;;;; Main API
            #:check-bnf
+           #:doc
            ;;;; Condition
            #:syntax-error
            ;;;; Miscellaneous TYPE.

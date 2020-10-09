@@ -1,4 +1,4 @@
-# CHECK-BNF 6.7.17
+# CHECK-BNF 7.0.0
 ## What is this?
 Macro arguments checker.
 
@@ -40,6 +40,25 @@ in (DEFUN "name" NIL :DUMMY)
 ```
 
 For detail, see spec/check-bnf.lisp
+
+## DOC
+You may emb bnf as documentation.
+Macro `DOC` allows you to do it with read time evaluation and read time labelling.
+
+```lisp
+(defmacro your-macro (&whole w a)
+  #.(check-bnf:doc "Header for your-macro"
+                   #0=(check-bnf:check-bnf (:whole w)
+                        ((a symbol))))
+  #0#
+  `',a)
+=> YOUR-MACRO
+
+(documentation 'your-macro 'function)
+=> "Header for your-macro
+A := SYMBOL
+"
+```
 
 ## From developer
 
