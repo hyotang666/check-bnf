@@ -122,7 +122,7 @@
       (funcall (formatter "~<~@{~/check-bnf:pprint-definitions/~^~:@_~}~:>")
                stream (cddr exp))))
 
-(defmacro doc (&rest forms)
+(defmacro doc (&body forms)
   (with-output-to-string (s)
     (let ((*print-pretty* t))
       (funcall (formatter "~<~@{~/check-bnf:pprint-bnf/~^~:@_~}~:>") s forms))))
