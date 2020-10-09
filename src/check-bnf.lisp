@@ -127,31 +127,30 @@
 (defun pprint-definitions (stream definitions &rest noise)
   (declare (ignore noise))
   (setf stream (or stream *standard-output*))
-  (funcall
-    (formatter
-     #.(apply #'concatenate 'string
-              (alexandria:flatten
-                (list "~<" ; pprint-logical-block
-                      (list "~@{" ; definitions
-                            (list "~{" ; each line.
-                                  "~VA := " ; name.
-                                  "~/check-bnf:pprint-def-clause/" ; def-clause.
-                                  "~@[~A~]~:@_" ; extended marker.
-                                  "~}")
-                            "~}")
-                      "~:>"))))
-    stream
-    (let ((num
-           (reduce #'max definitions
-                   :initial-value 0
-                   :key (alexandria:compose 'length 'string
-                                            'but-extended-marker 'car))))
-      (mapcar
-        (lambda (definition)
-          (multiple-value-bind (name mark)
-              (but-extended-marker (car definition))
-            (list num name (cdr definition) mark)))
-        definitions))))
+  (pprint-logical-block (stream definitions)
+    (funcall
+      (formatter
+       #.(apply #'concatenate 'string
+                (alexandria:flatten
+                  (list "~{" ; definitions
+                        (list "~{" ; each line.
+                              "~VA := " ; name.
+                              "~/check-bnf:pprint-def-clause/" ; def-clause.
+                              "~@[~A~]~:@_" ; extended marker.
+                              "~}")
+                        "~}"))))
+      stream
+      (let ((num
+             (reduce #'max definitions
+                     :initial-value 0
+                     :key (alexandria:compose 'length 'string
+                                              'but-extended-marker 'car))))
+        (mapcar
+          (lambda (definition)
+            (multiple-value-bind (name mark)
+                (but-extended-marker (car definition))
+              (list num name (cdr definition) mark)))
+          definitions)))))
 
 (declaim
  (ftype (function (t) (values (or null symbol) (or null character) &optional))
