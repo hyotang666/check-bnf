@@ -312,10 +312,10 @@
                                                     (loop :for (nil c) :on args
                                                                :by #'cddr
                                                           :when (not (null c))
-                                                              :collect (simple-condition-format-control
-                                                                         c)
-                                                              :and :collect (simple-condition-format-arguments
-                                                                              c))
+                                                            :collect (simple-condition-format-control
+                                                                       c)
+                                                            :and :collect (simple-condition-format-arguments
+                                                                            c))
                                                     "~2I~:@_in ~S~I" ,name)))
                       ,@forms))))))
 
