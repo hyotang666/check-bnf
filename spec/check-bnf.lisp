@@ -568,7 +568,7 @@
 
 ; CLISP specific guard #3.
 #+clisp ; CLISP's pprint-newline :mandatory does not work.
-#?(format nil "~:<~:@_~:>") => ""
+#?(format nil "~<~:@_~:>" nil) => ""
 ,:test equal
 
 #-clisp ; #3
