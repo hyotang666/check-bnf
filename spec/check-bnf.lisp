@@ -19,10 +19,18 @@
       ((var symbol))))
 :invokes-debugger syntax-error
 ,:test (lambda (condition)
-         (& (string= (princ-to-string condition)
+         (& #-clisp
+            (string= (princ-to-string condition)
                      (format nil "VAR := SYMBOL~2%~
                              but \"string\", it is type-of ~S"
                              (type-of "string")))))
+
+; CLISP specific guard #1.
+#+clisp
+#?(pprint-logical-block (*standard-output* nil)
+    (check-bnf::pprint-definitions nil '((var symbol))))
+:outputs " VAR := SYMBOL
+ "
 
 ; You can check some place at once.
 #?(let ((a 'symbol)
@@ -82,7 +90,8 @@
       ((var* symbol))))
 :invokes-debugger syntax-error
 ,:test (lambda (condition)
-         (& (string= (princ-to-string condition)
+         (& #-clisp ; #1
+            (string= (princ-to-string condition)
                      (format nil "VAR := SYMBOL*~2%~
                              but \"string\", it is type-of ~S~%  in (\"string\")"
                              (type-of "string")))))
@@ -92,7 +101,8 @@
       ((var* symbol))))
 :invokes-debugger syntax-error
 ,:test (lambda (condition)
-         (& (string= (princ-to-string condition)
+         (& #-clisp ; #1
+            (string= (princ-to-string condition)
                      (format nil "VAR := SYMBOL*~2%~
                              Require LIST but :NOT-LIST."))))
 
@@ -119,7 +129,8 @@
       ((var* keyword integer))))
 :invokes-debugger syntax-error
 ,:test (lambda (condition)
-         (& (string= (princ-to-string condition)
+         (& #-clisp ; #1
+            (string= (princ-to-string condition)
                      (format nil "VAR := KEYWORD INTEGER*~2%~
                              but \"not integer\", it is type-of ~S~%  ~
                              in (:KEY 2 :KEY2 \"not integer\")"
@@ -130,7 +141,8 @@
       ((var* keyword integer))))
 :invokes-debugger syntax-error
 ,:test (lambda (condition)
-         (& (string= (princ-to-string condition)
+         (& #-clisp ; #1
+            (string= (princ-to-string condition)
                      (format nil "VAR := KEYWORD INTEGER*~2%~
                              but \"not-key\", it is type-of ~S~%  ~
                              in (:KEY 1 \"not-key\" 2)"
@@ -141,7 +153,8 @@
       ((var* keyword string))))
 :invokes-debugger syntax-error
 ,:test (lambda (condition)
-         (& (string= (princ-to-string condition)
+         (& #-clisp ; #1
+            (string= (princ-to-string condition)
                      (format nil "VAR := KEYWORD STRING*~2%~
                              Length mismatch. Lack last STRING of (KEYWORD STRING)~%~
                              (NOT \"ballanced\" PLIST)"))))
@@ -157,7 +170,8 @@
       ((var* (keyword string)))))
 :invokes-debugger syntax-error
 ,:test (lambda (condition)
-         (& (string= (princ-to-string condition)
+         (& #-clisp ; #1
+            (string= (princ-to-string condition)
                      (format nil "VAR := (KEYWORD STRING)*~2%~
                              but :NOT-STRING, it is type-of KEYWORD~%  ~
                              in ((:KEY \"value\") (:KEY2 :NOT-STRING))"))))
@@ -167,7 +181,8 @@
       ((var* (keyword string)))))
 :invokes-debugger syntax-error
 ,:test (lambda (condition)
-         (& (string= (princ-to-string condition)
+         (& #-clisp ; #1
+            (string= (princ-to-string condition)
                      (format nil "VAR := (KEYWORD STRING)*~2%~
                              Length mismatch. (KEYWORD STRING) but (:NOT \"ballanced\" CLAUSE)~%  ~
                              in ((:KEY \"value\") (:NOT \"ballanced\" CLAUSE))"))))
@@ -177,7 +192,8 @@
       ((var* (keyword string)))))
 :invokes-debugger syntax-error
 ,:test (lambda (condition)
-         (& (string= (princ-to-string condition)
+         (& #-clisp ; #1
+            (string= (princ-to-string condition)
                      (format nil "VAR := (KEYWORD STRING)*~2%~
                              Length mismatch. Lack last STRING of (KEYWORD STRING)~%  ~
                              in ((:KEY \"value\") (:NOT-BALLANCED))"))))
@@ -200,7 +216,8 @@
       ((var+ integer))))
 :invokes-debugger syntax-error
 ,:test (lambda (condition)
-         (& (string= (princ-to-string condition)
+         (& #-clisp ; #1
+            (string= (princ-to-string condition)
                      (format nil "VAR := INTEGER+~2%~
                              Require CONS but NIL"))))
 
@@ -209,7 +226,8 @@
       ((var+ integer))))
 :invokes-debugger syntax-error
 ,:test (lambda (condition)
-         (& (string= (princ-to-string condition)
+         (& #-clisp ; #1
+            (string= (princ-to-string condition)
                      (format nil "VAR := INTEGER+~2%~
                              but \"not-integer\", it is type-of ~S~%  ~
                              in (\"not-integer\")"
@@ -220,7 +238,8 @@
       ((var+ integer))))
 :invokes-debugger syntax-error
 ,:test (lambda (condition)
-         (& (string= (princ-to-string condition)
+         (& #-clisp ; #1
+            (string= (princ-to-string condition)
                      (format nil "VAR := INTEGER+~2%~
                              Require CONS but :NOT-CONS"))))
 
@@ -238,43 +257,29 @@
 
 ; expects var for &whole.
 ; when specified, header and footer is generated in error message.
-#-clisp
 #?(let ((a "not-symbol"))
     (check-bnf ()
       ((a symbol))))
 :invokes-debugger syntax-error
 ,:test (lambda (condition)
-         (& (equal #.(format nil "A := SYMBOL~2%~
+         (& #-clisp ; #1
+            (equal #.(format nil "A := SYMBOL~2%~
                              but \"not-symbol\", it is type-of ~s"
                              (type-of "not-symbol"))
                    (princ-to-string condition))))
 
-#-clisp
 #?(let ((a "not-symbol"))
     (check-bnf (:whole '(whole ("not-symbol")))
       ((a symbol))))
 :invokes-debugger syntax-error
 ,:test (lambda (condition)
-         (& (equal (format nil "Syntax-error in WHOLE~2%  ~
+         (& #-clisp ; #1
+            (equal (format nil "Syntax-error in WHOLE~2%  ~
                            A := SYMBOL~2%~
                            but \"not-symbol\", it is type-of ~s~2%~
                            in ~s"
                            (type-of "not-symbol")
                            '(whole ("not-symbol")))
-                   (princ-to-string condition))))
-
-; note! clisp specific bug(?).
-; i do not know why but clisp does not call specified report function.
-; so header and footer is not generated.
-; after bug is removed, guard below will be failed.
-#+clisp
-#?(let ((a "not-symbol"))
-    (check-bnf ()
-      ((a symbol))))
-:invokes-debugger syntax-error
-,:test (lambda (condition)
-         (& (equal #.(format nil "but \"not-symbol\", it is type-of ~s"
-                             (type-of "not-symbol"))
                    (princ-to-string condition))))
 
 ; def := (clause+)+
@@ -338,7 +343,8 @@
       ((option (or null symbol)))))
 :invokes-debugger syntax-error
 ,:test (lambda (condition)
-         (& (string= (princ-to-string condition)
+         (& #-clisp ; #1
+            (string= (princ-to-string condition)
                      (format nil "OPTION := [ NULL | SYMBOL ]~2%~
                              but \"not-symbol\", it is type-of ~S"
                              (type-of "not-symbol")))))
@@ -350,7 +356,8 @@
        (setf-name ((eql setf) name)))))
 :invokes-debugger syntax-error
 ,:test (lambda (condition)
-         (& (string= (princ-to-string condition)
+         (& #-clisp ; #1
+            (string= (princ-to-string condition)
                      (format nil "FUNCTION-NAME := [ NAME | SETF-NAME ]~%~
                              NAME          := SYMBOL~%~
                              SETF-NAME     := ((EQL SETF) NAME)~2%~
@@ -378,7 +385,8 @@
        (other* symbol))))
 :invokes-debugger syntax-error
 ,:test (lambda (condition)
-         (& (string= (princ-to-string condition)
+         (& #-clisp ; #1
+            (string= (princ-to-string condition)
                      (format nil "OTHER := SYMBOL*~2%~
                              but \"not option nor other*\", it is type-of ~S~%  ~
                              in (\"not option nor other*\" AND OTHERS)"
@@ -410,7 +418,8 @@
        (required keyword))))
 :invokes-debugger syntax-error
 ,:test (lambda (condition)
-         (& (string= (princ-to-string condition)
+         (& #-clisp ; #1
+            (string= (princ-to-string condition)
                      (format nil "REQUIRED := KEYWORD~2%~
                              Length mismatch. Lack last REQUIRED of (SYMBOL SYMBOL REQUIRED)"))))
 
@@ -439,7 +448,8 @@
        (name symbol))))
 :invokes-debugger syntax-error
 ,:test (lambda (condition)
-         (& (string= (princ-to-string condition)
+         (& #-clisp ; #1
+            (string= (princ-to-string condition)
                      (format nil "VAR  := [ STRING | NAME* ]~%~
                              NAME := SYMBOL~2%~
                              but :NOT-LIST"))))
@@ -450,7 +460,8 @@
        (name symbol))))
 :invokes-debugger syntax-error
 ,:test (lambda (condition)
-         (& (string= (princ-to-string condition)
+         (& #-clisp ; #1
+            (string= (princ-to-string condition)
                      (format nil "VAR  := [ STRING | NAME* ]~%~
                              NAME := SYMBOL~2%~
                              but (\"string\" \"list\")"))))
@@ -474,7 +485,8 @@
        (var symbol))))
 :invokes-debugger syntax-error
 ,:test (lambda (condition)
-         (& (string= (princ-to-string condition)
+         (& #-clisp ; #1
+            (string= (princ-to-string condition)
                      (format nil "VAR := SYMBOL~2%~
                              Length mismatch. (VAR?) but (VAR TOO MUCH)"))))
 
@@ -484,7 +496,8 @@
        (var symbol))))
 :invokes-debugger syntax-error
 ,:test (lambda (condition)
-         (& (string= (princ-to-string condition)
+         (& #-clisp ; #1
+            (string= (princ-to-string condition)
                      (format nil "VAR := SYMBOL~2%~
                              Require CONS but \"not symbol\""))))
 
@@ -536,14 +549,16 @@
 #?(pprint-check-bnf nil '(check-bnf nil not-list))
 => unspecified ; depending on implementation.
 
-;;; [clisp say](https://clisp.sourceforge.io/impnotes.html#clpp)
+; CLISP specific guard #2.
+#+clisp ; CLISP does not remove spaces before newline.
+#?(pprint-check-bnf nil '(check-bnf ()
+                           ((a symbol))
+                           ((b string))))
+:outputs "(CHECK-BNF () 
+  ((A SYMBOL))
+  ((B STRING)))"
 
-;;; > the lisp pretty printer implementation is not perfect yet.
-
-;;; so two tests below are ignored in clisp.
-;;; fortunately this is just printing, not check-bnf feature itself.
-
-#-clisp
+#-clisp ; #2
 #?(pprint-check-bnf nil '(check-bnf ()
                            ((a symbol))
                            ((b string))))
@@ -551,7 +566,12 @@
   ((A SYMBOL))
   ((B STRING)))"
 
-#-clisp
+; CLISP specific guard #3.
+#+clisp ; CLISP's pprint-newline :mandatory does not work.
+#?(format nil "~:<~:@_~:>") => ""
+,:test equal
+
+#-clisp ; #3
 #?(pprint-check-bnf nil '(check-bnf ()
                            ((function-name (or name setf-name))
                             (name symbol)
