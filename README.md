@@ -3,15 +3,15 @@
 Macro arguments checker.
 
 ### Current lisp world
-Common Lisp has true macro.
-Writing macro means extending compiler i.e. creating new language.
+Common Lisp has a true macro.
+Writing macro means extending the compiler i.e. creating a new language.
 
 ### Issues
-Lack of documentations.
+Lack of documentation.
 Do you want to use LANGUAGE which has no documentation nor BNF?
 
 ### Proposal
-Check-bnf provides bnf like syntax checker.
+Check-bnf provides a bnf like syntax checker.
 
 It allows you to write macro arguments definition.
 
@@ -39,17 +39,17 @@ but "name"
 in (DEFUN "name" NIL :DUMMY)
 ```
 
-For detail, see spec/check-bnf.lisp
+For detail, see [spec file](spec/check-bnf.lisp).
 
 ## DOC
 You may emb bnf as documentation.
-Macro `DOC` allows you to do it with read time evaluation and read time labelling.
+Macro `DOC` allows you to do it by read time evaluation and read time labeling.
 
 ```lisp
 (defmacro your-macro (&whole w a)
   #.(check-bnf:doc "Header for your-macro"
-                   #0=(check-bnf:check-bnf (:whole w)
-                        ((a symbol))))
+      #0=(check-bnf:check-bnf (:whole w)
+           ((a symbol))))
   #0#
   `',a)
 => YOUR-MACRO
@@ -78,10 +78,12 @@ SBCL
 
 ### Known issue.
 #### CLISP
-In clisp, some tests are failed.
 [CLISP say](https://clisp.sourceforge.io/impnotes.html#clpp)
 
 > The Lisp Pretty Printer implementation is not perfect yet.
+
+CHECK-BNF works fine but the printed message is a little bit strange in clisp.
+For details [see spec file](spec/check-bnf.lisp).
 
 ## Installation
 
