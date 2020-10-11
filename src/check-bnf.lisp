@@ -185,7 +185,7 @@
 
 (defun cons-equal (list1 list2) (tree-equal list1 list2 :test (constantly t)))
 
-(defun ignored (arg) (declare (ignore arg)) nil)
+(defun ignored (arg) (declare (ignore arg)) (values nil nil))
 
 ;;;; CHECK-BNF
 
