@@ -580,3 +580,11 @@
   ((FUNCTION-NAME (OR NAME SETF-NAME))
    (NAME SYMBOL)
    (SETF-NAME ((EQL SETF) NAME))))"
+
+#?(PPRINT-CHECK-BNF NIL
+                    '(CHECK-BNF ()
+                       (A
+                        B)))
+:outputs "(CHECK-BNF ()
+  (A
+   B))"
