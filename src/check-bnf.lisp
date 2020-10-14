@@ -276,6 +276,19 @@
       (syntax-error name "Length mismatch. Lack last ~{~S~^ ~} of ~S~:@_~S"
                     (subseq spec mod) spec actual))))
 
+(defun resignaler (name actual-args)
+  (lambda (&rest args)
+    (loop :for (nil c) :on args :by #'cddr
+          :when c
+            :do (syntax-error name "~{~?~^ ~}~@?"
+                              (loop :for (nil c) :on args :by #'cddr
+                                    :when c
+                                      :collect (simple-condition-format-control
+                                                 c)
+                                      :and :collect (simple-condition-format-arguments
+                                                      c))
+                              "~2I~:@_in ~S~I" actual-args))))
+
 (defun <*form-body> (name spec+)
   (let* ((length (length spec+))
          (gsyms (alexandria:make-gensym-list length))
@@ -305,20 +318,7 @@
                               (4 '#'cddddr)
                               (otherwise
                                `(lambda (list) (nthcdr ,length list)))))
-                :do (multiple-value-call
-                        (lambda (&rest args)
-                          (loop :for (nil c) :on args :by #'cddr
-                                :when c
-                                  :do (syntax-error ',name "~{~?~^ ~}~@?"
-                                                    (loop :for (nil c) :on args
-                                                               :by #'cddr
-                                                          :when (not (null c))
-                                                            :collect (simple-condition-format-control
-                                                                       c)
-                                                            :and :collect (simple-condition-format-arguments
-                                                                            c))
-                                                    "~2I~:@_in ~S~I" ,name)))
-                      ,@forms))))))
+                :do (multiple-value-call (resignaler ',name ,name) ,@forms))))))
 
 (defun <local-check-form> (name var spec)
   (cond
