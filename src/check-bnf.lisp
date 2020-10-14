@@ -361,53 +361,54 @@
                  (mapcar (lambda (spec) (<local-check-form> name var spec))
                          (cdr spec)))))))
 
+(defun check-cons (actual-args specs name)
+  (do ((actual actual-args (cdr actual))
+        (specs specs (cdr specs)))
+       ((or (atom actual) (atom specs))
+        (matrix-case:matrix-typecase (actual specs)
+          ((null null))
+          ((atom atom) (local-check actual specs))
+          ((null (cons * null))
+           (let ((elt (car specs)))
+             (if (vectorp elt)
+                 (case (extended-marker (elt elt 0))
+                   ((#\? #\*) (ignore-errors (local-check actual elt)))
+                   (otherwise
+                    (syntax-error name
+                                  "Length mismatch. Lack last ~{~S~^ ~} of ~S"
+                                  (mapcar
+                                    (lambda (x)
+                                      (if (vectorp x)
+                                          (elt x 0)
+                                          x))
+                                    specs)
+                                  name)))
+                 (case (extended-marker (car specs))
+                   ((#\? #\*) (local-check actual (car specs)))
+                   (otherwise
+                    (syntax-error name
+                                  "Length mismatch. Lack last ~{~S~^ ~} of ~S"
+                                  specs name))))))
+          ((atom (cons * null))
+           (syntax-error name "Require CONS but ~S" actual))
+          (otherwise
+           (syntax-error name "Length mismatch. ~S but ~S" name actual-args))))
+    (let ((elt (car specs)))
+      (if (vectorp elt)
+          (case (extended-marker (elt elt 0))
+            (#\?
+             (handler-case (local-check (car actual) elt)
+               (error ()
+                 (push "dummy" actual))))
+            ((#\+ #\*) (local-check actual elt) (setf actual nil))
+            (otherwise (local-check (car actual) elt)))
+          (local-check (car actual) elt)))))
+
 (defun <local-cons-check-form> (name var spec)
   (if (t-p spec)
       `(unless (cons-equal ,var ',spec)
          (syntax-error ',spec "Length mismatch. ~S but ~S" ',spec ,var))
-      (alexandria:with-gensyms (vl sl elt)
-        `(do* ((,vl ,var (cdr ,vl))
-               (,sl ,(<spec-form> spec name) (cdr ,sl)))
-              ((or (atom ,vl) (atom ,sl))
-               (matrix-case:matrix-typecase (,vl ,sl)
-                 ((null null))
-                 ((atom atom) (local-check ,vl ,sl))
-                 ((null (cons * null))
-                  (let ((elt (car ,sl)))
-                    (if (vectorp elt)
-                        (case (extended-marker (elt elt 0))
-                          ((#\? #\*) (ignore-errors (local-check ,vl elt)))
-                          (otherwise
-                           (syntax-error ',spec
-                                         "Length mismatch. Lack last ~{~S~^ ~} of ~S"
-                                         (mapcar
-                                           (lambda (x)
-                                             (if (vectorp x)
-                                                 (elt x 0)
-                                                 x))
-                                           ,sl)
-                                         ',spec)))
-                        (case (extended-marker (car ,sl))
-                          ((#\? #\*) (local-check ,vl (car ,sl)))
-                          (otherwise
-                           (syntax-error ',spec
-                                         "Length mismatch. Lack last ~{~S~^ ~} of ~S"
-                                         ,sl ',spec))))))
-                 ((atom (cons * null))
-                  (syntax-error ',spec "Require CONS but ~S" ,vl))
-                 (otherwise
-                  (syntax-error ',spec "Length mismatch. ~S but ~S" ',spec
-                                ,var))))
-           (let ((,elt (car ,sl)))
-             (if (vectorp ,elt)
-                 (case (extended-marker (elt ,elt 0))
-                   (#\?
-                    (handler-case (local-check (car ,vl) ,elt)
-                      (error ()
-                        (push "dummy" ,vl))))
-                   ((#\+ #\*) (local-check ,vl ,elt) (setf ,vl nil))
-                   (otherwise (local-check (car ,vl) ,elt)))
-                 (local-check (car ,vl) ,elt)))))))
+      `(check-cons ,var ,(<spec-form> spec name) ',spec)))
 
 (defun <spec-form> (spec name)
   (cond ((null spec) nil)
