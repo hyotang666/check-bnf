@@ -285,6 +285,14 @@
                           :collect (simple-condition-format-arguments c))
                     "~2I~:@_in ~S~I" actual-args))))
 
+(defmacro capture-syntax-error (form)
+  `(handler-case ,form
+     (syntax-error (c)
+       c)
+     (:no-error (&rest args)
+       (declare (ignore args))
+       (values))))
+
 (defun <*form-body> (name spec+)
   (let* ((length (length spec+))
          (gsyms (alexandria:make-gensym-list length))
@@ -293,12 +301,7 @@
                 :for spec :in spec+
                 :for form = (<local-check-form> name g spec)
                 :when form
-                  :collect `(handler-case ,form
-                              (syntax-error (c)
-                                c)
-                              (:no-error (&rest args)
-                                (declare (ignore args))
-                                (values)))
+                  :collect `(capture-syntax-error ,form)
                 :else
                   :collect `(ignored ,g))))
     (if (null (remove 'ignored forms :key #'car))
