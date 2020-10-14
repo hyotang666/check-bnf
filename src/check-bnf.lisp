@@ -270,6 +270,12 @@
         (syntax-error ',name "Require LIST but ~S." ,name)
         ,(<*form-body> name spec+))))
 
+(defun check-length (actual spec name)
+  (let ((mod (mod (length actual) (length spec))))
+    (unless (zerop mod)
+      (syntax-error name "Length mismatch. Lack last ~{~S~^ ~} of ~S~:@_~S"
+                    (subseq spec mod) spec actual))))
+
 (defun <*form-body> (name spec+)
   (let* ((length (length spec+))
          (gsyms (alexandria:make-gensym-list length))
@@ -289,12 +295,7 @@
         nil
         `(progn
           ,@(when (< 1 length)
-              `((let ((mod (mod (length ,name) ,length)))
-                  (unless (zerop mod)
-                    (syntax-error ',name
-                                  "Length mismatch. Lack last ~{~S~^ ~} of ~S~@?"
-                                  (subseq ',spec+ mod) ',spec+ "~:@_~S"
-                                  ,name)))))
+              `((check-length ,name ',spec+ ',name)))
           (loop :for ,gsyms :on ,name
                      :by ,(let ((length (length spec+)))
                             (case length
