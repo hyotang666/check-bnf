@@ -363,36 +363,36 @@
 
 (defun check-cons (actual-args specs name)
   (do ((actual actual-args (cdr actual))
-        (specs specs (cdr specs)))
-       ((or (atom actual) (atom specs))
-        (matrix-case:matrix-typecase (actual specs)
-          ((null null))
-          ((atom atom) (local-check actual specs))
-          ((null (cons * null))
-           (let ((elt (car specs)))
-             (if (vectorp elt)
-                 (case (extended-marker (elt elt 0))
-                   ((#\? #\*) (ignore-errors (local-check actual elt)))
-                   (otherwise
-                    (syntax-error name
-                                  "Length mismatch. Lack last ~{~S~^ ~} of ~S"
-                                  (mapcar
-                                    (lambda (x)
-                                      (if (vectorp x)
-                                          (elt x 0)
-                                          x))
-                                    specs)
-                                  name)))
-                 (case (extended-marker (car specs))
-                   ((#\? #\*) (local-check actual (car specs)))
-                   (otherwise
-                    (syntax-error name
-                                  "Length mismatch. Lack last ~{~S~^ ~} of ~S"
-                                  specs name))))))
-          ((atom (cons * null))
-           (syntax-error name "Require CONS but ~S" actual))
-          (otherwise
-           (syntax-error name "Length mismatch. ~S but ~S" name actual-args))))
+       (specs specs (cdr specs)))
+      ((or (atom actual) (atom specs))
+       (matrix-case:matrix-typecase (actual specs)
+         ((null null))
+         ((atom atom) (local-check actual specs))
+         ((null (cons * null))
+          (let ((elt (car specs)))
+            (if (vectorp elt)
+                (case (extended-marker (elt elt 0))
+                  ((#\? #\*) (ignore-errors (local-check actual elt)))
+                  (otherwise
+                   (syntax-error name
+                                 "Length mismatch. Lack last ~{~S~^ ~} of ~S"
+                                 (mapcar
+                                   (lambda (x)
+                                     (if (vectorp x)
+                                         (elt x 0)
+                                         x))
+                                   specs)
+                                 name)))
+                (case (extended-marker (car specs))
+                  ((#\? #\*) (local-check actual (car specs)))
+                  (otherwise
+                   (syntax-error name
+                                 "Length mismatch. Lack last ~{~S~^ ~} of ~S"
+                                 specs name))))))
+         ((atom (cons * null))
+          (syntax-error name "Require CONS but ~S" actual))
+         (otherwise
+          (syntax-error name "Length mismatch. ~S but ~S" name actual-args))))
     (let ((elt (car specs)))
       (if (vectorp elt)
           (case (extended-marker (elt elt 0))
