@@ -185,7 +185,7 @@
 
 (defun cons-equal (list1 list2) (tree-equal list1 list2 :test (constantly t)))
 
-(defun ignored (arg) (declare (ignore arg)) (values nil nil))
+(defun ignored (arg) (declare (ignore arg)) (values))
 
 ;;;; CHECK-BNF
 
@@ -277,17 +277,13 @@
                     (subseq spec mod) spec actual))))
 
 (defun resignaler (name actual-args)
-  (lambda (&rest args)
-    (loop :for (nil c) :on args :by #'cddr
-          :when c
-            :do (syntax-error name "~{~?~^ ~}~@?"
-                              (loop :for (nil c) :on args :by #'cddr
-                                    :when c
-                                      :collect (simple-condition-format-control
-                                                 c)
-                                      :and :collect (simple-condition-format-arguments
-                                                      c))
-                              "~2I~:@_in ~S~I" actual-args))))
+  (lambda (&rest conditions)
+    (when conditions
+      (syntax-error name "~{~?~^ ~}~@?"
+                    (loop :for c :in conditions
+                          :collect (simple-condition-format-control c)
+                          :collect (simple-condition-format-arguments c))
+                    "~2I~:@_in ~S~I" actual-args))))
 
 (defun <*form-body> (name spec+)
   (let* ((length (length spec+))
@@ -299,9 +295,10 @@
                 :when form
                   :collect `(handler-case ,form
                               (syntax-error (c)
-                                (values ,g c))
+                                c)
                               (:no-error (&rest args)
-                                (declare (ignore args)) (values ,g nil)))
+                                (declare (ignore args))
+                                (values)))
                 :else
                   :collect `(ignored ,g))))
     (if (null (remove 'ignored forms :key #'car))
@@ -356,7 +353,8 @@
                              nil
                              `(syntax-error ',name "but ~S" ,var)))
                       (:no-error (&rest args)
-                        (declare (ignore args)) t)))
+                        (declare (ignore args))
+                        t)))
                  (mapcar (lambda (spec) (<local-check-form> name var spec))
                          (cdr spec)))))))
 
@@ -484,7 +482,8 @@
                           (simple-condition-format-arguments c) "~:@_in ~S"
                           arg))
           (:no-error (&rest args)
-            (declare (ignore args)) nil)))))
+            (declare (ignore args))
+            nil)))))
 
 (defun +-checker (name cont)
   (lambda (arg)
@@ -499,7 +498,8 @@
                           (simple-condition-format-arguments c) "~:@_in ~S"
                           arg))
           (:no-error (&rest args)
-            (declare (ignore args)) nil)))))
+            (declare (ignore args))
+            nil)))))
 
 ;;;; SPEC-INFER
 
