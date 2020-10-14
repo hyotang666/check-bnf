@@ -107,10 +107,27 @@
                              Require LIST but :NOT-LIST."))))
 
 ; When expected T, efficient code is generated.
-#?(let ((option* ()))
-    (check-bnf:check-bnf ()
-      ((option* keyword T))))
-=> NIL
+#?(CHECK-BNF () ((OPTION* KEYWORD T)))
+:expanded-to (LET ((check-bnf::*WHOLE* NIL) (check-bnf::*BNF* '((OPTION* KEYWORD T))))
+               (LABELS ((OPTION* (OPTION*)
+                          (IF (TYPEP OPTION* '(AND ATOM (NOT NULL)))
+                              (SYNTAX-ERROR 'OPTION* "Require LIST but ~S."
+                                            OPTION*)
+                              (PROGN
+                               (check-bnf::CHECK-LENGTH OPTION* '(KEYWORD T) 'OPTION*)
+                               (LOOP :FOR (G11516
+                                           G11517) :ON OPTION* :BY #'CDDR
+                                     :DO (MULTIPLE-VALUE-CALL
+                                             (check-bnf::RESIGNALER 'OPTION* OPTION*)
+                                           (check-bnf::CAPTURE-SYNTAX-ERROR
+                                            (UNLESS (TYPEP G11516 'KEYWORD)
+                                              (SYNTAX-ERROR 'OPTION*
+                                                            "but ~S, it is type-of ~S"
+                                                            G11516
+                                                            (TYPE-OF
+                                                             G11516))))
+                                           (check-bnf::IGNORED G11517)))))))
+                 (OPTION* OPTION*)))
 
 ; If you do not like names var as XXX*, you can specify alias.
 #?(let ((vars '(symbol)))
