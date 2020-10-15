@@ -118,7 +118,12 @@
                               (PROGN
                                (check-bnf::CHECK-LENGTH OPTION* '(KEYWORD T) 'OPTION*)
                                (LOOP :FOR args :ON OPTION* :BY #'CDDR
-                                     :for (G11516 G11517) := args
+                                     :for (G11516 G11517)
+                                         := (if (typep args '(cons * (cons * *)))
+                                              args
+                                              (let ((check-bnf::*default-condition*
+                                                      'check-bnf::may-syntax-error))
+                                                (syntax-error 'option* "May length mismatch." args)))
                                      :DO (MULTIPLE-VALUE-CALL
                                              (check-bnf::RESIGNALER 'OPTION* args)
                                            (check-bnf::CAPTURE-SYNTAX-ERROR
@@ -214,7 +219,7 @@
          (& #-clisp ; #1
             (string= (princ-to-string condition)
                      (format nil "VAR := (KEYWORD STRING)*~2%~
-                             Length mismatch. Lack last STRING of (KEYWORD STRING)~%  ~
+                             Length mismatch. (KEYWORD STRING) but (:NOT-BALLANCED)~%  ~
                              in ((:NOT-BALLANCED))"))))
 
 ; of course dotted are valid.
@@ -411,6 +416,27 @@
                              in (\"not option nor other*\" AND OTHERS)"
                              (type-of "not option nor other*")))))
 
+#?(LET (VAR)
+    (CHECK-BNF ()
+      ((VAR (A* B*))
+       (A SYMBOL)
+       (B INTEGER))))
+=> NIL
+
+#?(LET ((VAR '(SYM)))
+    (CHECK-BNF ()
+      ((VAR (A* B*))
+       (A SYMBOL)
+       (B INTEGER))))
+=> NIL
+
+#?(LET ((VAR '(SYM SYM)))
+    (CHECK-BNF ()
+      ((VAR (A* B*))
+       (A SYMBOL)
+       (B INTEGER))))
+=> NIL
+
 ; Key value pair in heads.
 #?(LET ((ARGS '(:KEY 1 :KEY 2 "doc")))
     (CHECK-BNF ()
@@ -467,7 +493,7 @@
          (& #-clisp ; #1
             (string= (princ-to-string condition)
                      (format nil "REQUIRED := KEYWORD~2%~
-                             Length mismatch. Lack last REQUIRED of (SYMBOL SYMBOL REQUIRED)"))))
+                             Length mismatch. (SYMBOL SYMBOL REQUIRED) but (SYMBOL SYMBOL)"))))
 
 ;; right side xxx*
 #?(let ((var '(symbol)))
@@ -536,7 +562,19 @@
                      (format nil "VAR := SYMBOL~2%~
                              Length mismatch. (VAR?) but (VAR TOO MUCH)"))))
 
-#?(let ((ll "not symbol"))
+#?(let ((ll "not list"))
+    (check-bnf ()
+      ((ll (var?))
+       (var symbol))))
+:invokes-debugger syntax-error
+,:test (lambda (condition)
+         (& #-clisp ; #1
+            (string= (princ-to-string condition)
+                     (format nil "LL  := (VAR?)~%~
+                             VAR := SYMBOL~2%~
+                             Require CONS but \"not list\""))))
+
+#?(let ((ll '("not symbol")))
     (check-bnf ()
       ((ll (var?))
        (var symbol))))
@@ -545,7 +583,8 @@
          (& #-clisp ; #1
             (string= (princ-to-string condition)
                      (format nil "VAR := SYMBOL~2%~
-                             Require CONS but \"not symbol\""))))
+                             but \"not symbol\", it is type-of ~S"
+                             (type-of "not symbol")))))
 
 (requirements-about expression :doc-type type)
 ;;;; description:
@@ -634,3 +673,16 @@
 :outputs "(CHECK-BNF ()
   (A
    B))"
+
+#?(LET ((VAR '(SYM)))
+    (CHECK-BNF ()
+      ((VAR (A* B*))
+       (A SYMBOL)
+       (B INTEGER))))
+=> NIL
+#?(LET ((VAR '(SYM SYM)))
+    (CHECK-BNF ()
+      ((VAR (A* B*))
+       (A SYMBOL)
+       (B INTEGER))))
+=> NIL

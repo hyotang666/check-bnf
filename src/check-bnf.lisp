@@ -386,7 +386,14 @@
                               (4 '#'cddddr)
                               (otherwise
                                `(lambda (list) (nthcdr ,length list)))))
-                :for ,gsyms := ,args
+                :for ,gsyms
+                     := ,(if (< 1 length)
+                             `(if (typep ,args '(cons * (cons * *))) ; at-least-two-elt-p
+                                  ,args
+                                  (let ((*default-condition* 'may-syntax-error))
+                                    (syntax-error ',name "May length mismatch."
+                                                  ,args)))
+                             args)
                 :do (multiple-value-call (resignaler ',name ,args) ,@forms))))))
 
 ;; <LOCAL-CHECK-FORM>
@@ -445,36 +452,10 @@
 (defun check-cons (actual-args specs name)
   (do ((actual actual-args (cdr actual))
        (specs specs (cdr specs)))
-      ((or (atom actual) (atom specs))
+      ((atom specs)
        (matrix-case:matrix-typecase (actual specs)
          ((null null))
-         ((atom atom) (local-check actual specs))
-         ((null (cons * null))
-          (let ((elt (car specs)))
-            (if (spec-p elt)
-                (case (extended-marker (spec-name elt))
-                  ((#\? #\*)
-                   (handler-case (local-check actual elt) (syntax-error ())))
-                  (otherwise
-                   (let ((*default-condition* 'length-mismatch))
-                     (syntax-error name
-                                   "Length mismatch. Lack last ~{~S~^ ~} of ~S"
-                                   (mapcar
-                                     (lambda (x)
-                                       (if (spec-p x)
-                                           (spec-name x)
-                                           x))
-                                     specs)
-                                   name))))
-                (case (extended-marker (car specs))
-                  ((#\? #\*) (local-check actual (car specs)))
-                  (otherwise
-                   (let ((*default-condition* 'length-mismatch))
-                     (syntax-error name
-                                   "Length mismatch. Lack last ~{~S~^ ~} of ~S"
-                                   specs name)))))))
-         ((atom (cons * null))
-          (syntax-error name "Require CONS but ~S" actual))
+         ((atom t) (local-check actual specs))
          (otherwise
           (let ((*default-condition* 'length-mismatch))
             (syntax-error name "Length mismatch. ~S but ~S" name
@@ -483,11 +464,18 @@
       (if (spec-p elt)
           (case (extended-marker (spec-name elt))
             (#\?
-             (handler-case (local-check (car actual) elt)
-               (syntax-error (c)
-                 (if (cdr specs)
-                     (push "dummy" actual)
-                     (error c)))))
+             (block nil
+               (handler-case
+                   (local-check
+                     (typecase actual
+                       (null (return))
+                       (atom actual)
+                       (otherwise (car actual)))
+                     elt)
+                 (syntax-error (c)
+                   (if (cdr specs)
+                       (push "dummy" actual)
+                       (error c))))))
             ((#\*)
              (handler-case
                  (if (cdr specs)
@@ -507,15 +495,30 @@
                  (declare (ignore _))
                  (setf actual nil))))
             ((#\+) (local-check actual elt) (setf actual nil))
-            (otherwise (local-check (car actual) elt)))
-          (local-check (car actual) elt)))))
+            (otherwise
+             (typecase actual
+               (null
+                (let ((*default-condition* 'length-mismatch))
+                  (syntax-error name "Length mismatch. ~S but ~S" name
+                                actual-args)))
+               (atom (local-check actual elt))
+               (otherwise (local-check (car actual) elt)))))
+          (typecase actual
+            (null
+             (let ((*default-condition* 'length-mismatch))
+               (syntax-error name "Length mismatch. ~S but ~S" name
+                             actual-args)))
+            (atom (local-check actual elt))
+            (otherwise (local-check (car actual) elt)))))))
 
 (defun <local-cons-check-form> (name var spec)
   (if (t-p spec)
       `(unless (cons-equal ,var ',spec)
          (let ((*default-condition* 'length-mismatch))
            (syntax-error ',spec "Length mismatch. ~S but ~S" ',spec ,var)))
-      `(check-cons ,var ,(<spec-form> spec name) ',spec)))
+      `(if (typep ,var '(and atom (not list)))
+           (syntax-error ',name "Require CONS but ~S" ,name)
+           (check-cons ,var ,(<spec-form> spec name) ',spec))))
 
 (defun <spec-form> (spec name)
   (cond ((null spec) nil)
