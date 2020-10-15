@@ -517,7 +517,12 @@
          (let ((*default-condition* 'length-mismatch))
            (syntax-error ',spec "Length mismatch. ~S but ~S" ',spec ,var)))
       `(if (typep ,var '(and atom (not list)))
-           (syntax-error ',name "Require CONS but ~S" ,name)
+           ,(if (every
+                  (lambda (s)
+                    (and (symbolp s) (find (extended-marker s) "*?")))
+                  spec)
+                `(syntax-error ',name "Require LIST but ~S" ,name)
+                `(syntax-error ',name "Require CONS but ~S" ,name))
            (check-cons ,var ,(<spec-form> spec name) ',spec))))
 
 (defun <spec-form> (spec name)

@@ -601,7 +601,7 @@
             (string= (princ-to-string condition)
                      (format nil "LL  := (VAR?)~%~
                              VAR := SYMBOL~2%~
-                             Require CONS but \"not list\""))))
+                             Require LIST but \"not list\""))))
 
 #?(let ((ll '("not symbol")))
     (check-bnf ()
