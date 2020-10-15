@@ -544,22 +544,7 @@
                                    spec spec+)))
            :else
              :do (ignore-errors (local-check name spec+))))
-    ((consp spec)
-     (do* ((spec spec (cdr spec))
-           (value name (cdr value)))
-          ((or (atom spec) (atom value))
-           (matrix-case:matrix-typecase (spec value)
-             ((null null))
-             ((atom atom) (local-check value spec))
-             (otherwise
-              (let ((*default-condition* 'length-mismatch))
-                (syntax-error spec "Length mismatch. ~S but ~S" spec name)))))
-       (let ((elt (car spec)))
-         (if (and (symbolp elt) (eql #\? (extended-marker elt)))
-             (handler-case (local-check (car value) elt)
-               (error ()
-                 (push "dummy" value))) ; as rewind.
-             (local-check (car value) elt)))))))
+    ((consp spec) (check-cons name spec spec))))
 
 ;; <+FORM>
 
