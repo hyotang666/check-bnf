@@ -447,62 +447,48 @@
   (checker (error "Checker is Required for spec.") :type function :read-only t))
 
 (defun check-cons (actual-args specs name)
-  (do ((actual actual-args (cdr actual))
-       (specs specs (cdr specs)))
-      ((atom specs)
-       (matrix-case:matrix-typecase (actual specs)
-         ((null null))
-         ((atom t) (local-check actual specs))
-         (otherwise
-          (let ((*default-condition* 'length-mismatch))
-            (syntax-error name "Length mismatch. ~S but ~S" name
-                          actual-args)))))
-    (let ((elt (car specs)))
-      (if (spec-p elt)
-          (case (extended-marker (spec-name elt))
-            (#\?
-             (block nil
-               (handler-case
-                   (local-check
-                     (typecase actual
-                       (null (return))
-                       (atom actual)
-                       (otherwise (car actual)))
-                     elt)
+  (flet ((check (actual null-thunk spec)
+           (typecase actual
+             (null (funcall null-thunk))
+             (atom (local-check actual spec))
+             (otherwise (local-check (car actual) spec))))
+         (length-mismatch ()
+           (let ((*default-condition* 'length-mismatch))
+             (syntax-error name "Length mismatch. ~S but ~S" name
+                           actual-args))))
+    (do ((actual actual-args (cdr actual))
+         (specs specs (cdr specs)))
+        ((atom specs)
+         (matrix-case:matrix-typecase (actual specs)
+           ((null null))
+           ((atom t) (local-check actual specs))
+           (otherwise (length-mismatch))))
+      (let ((elt (car specs)))
+        (if (spec-p elt)
+            (case (extended-marker (spec-name elt))
+              (#\?
+               (handler-case (check actual (lambda ()) elt)
                  (syntax-error (c)
                    (if (cdr specs)
                        (push "dummy" actual)
-                       (error c))))))
-            ((#\*)
-             (handler-case (local-check actual elt)
-               (may-syntax-error (condition)
-                 (if (cdr specs)
-                     (setf actual
-                             (cons "dummy"
-                                   (car
-                                     (last
-                                       (simple-condition-format-arguments
-                                         condition)))))
-                     (error condition)))
-               (:no-error (&rest _)
-                 (declare (ignore _))
-                 (setf actual nil))))
-            ((#\+) (local-check actual elt) (setf actual nil))
-            (otherwise
-             (typecase actual
-               (null
-                (let ((*default-condition* 'length-mismatch))
-                  (syntax-error name "Length mismatch. ~S but ~S" name
-                                actual-args)))
-               (atom (local-check actual elt))
-               (otherwise (local-check (car actual) elt)))))
-          (typecase actual
-            (null
-             (let ((*default-condition* 'length-mismatch))
-               (syntax-error name "Length mismatch. ~S but ~S" name
-                             actual-args)))
-            (atom (local-check actual elt))
-            (otherwise (local-check (car actual) elt)))))))
+                       (error c)))))
+              ((#\*)
+               (handler-case (local-check actual elt)
+                 (may-syntax-error (condition)
+                   (if (cdr specs)
+                       (setf actual
+                               (cons "dummy"
+                                     (car
+                                       (last
+                                         (simple-condition-format-arguments
+                                           condition)))))
+                       (error condition)))
+                 (:no-error (&rest _)
+                   (declare (ignore _))
+                   (setf actual nil))))
+              ((#\+) (local-check actual elt) (setf actual nil))
+              (otherwise (check actual #'length-mismatch elt)))
+            (check actual #'length-mismatch elt))))))
 
 (defun <local-cons-check-form> (name var spec)
   (if (t-p spec)
