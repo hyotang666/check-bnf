@@ -450,6 +450,22 @@
        (B INTEGER))))
 => NIL
 
+#?(LET ((VAR '(SYM SYM "string")))
+    (CHECK-BNF ()
+      ((VAR (A* B*))
+       (A SYMBOL)
+       (B INTEGER))))
+:invokes-debugger SYNTAX-ERROR
+,:test (lambda (condition)
+         (& #-clisp ; #1
+            (string= (princ-to-string condition)
+                     (format nil "VAR := (A* B*)~%~
+                             A   := SYMBOL~%~
+                             B   := INTEGER~2%~
+                             but \"string\", it is type-of ~S~%~
+                             in (\"string\")"
+                             (type-of "string")))))
+
 ; Key value pair in heads.
 #?(LET ((ARGS '(:KEY 1 :KEY 2 "doc")))
     (CHECK-BNF ()

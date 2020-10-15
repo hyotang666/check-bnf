@@ -595,13 +595,12 @@
               :do (handler-case (funcall cont (car rest))
                     (syntax-error (c)
                       (let ((*default-condition* 'may-syntax-error))
-                        (syntax-error name
-                                      (concatenate 'string
-                                                   (simple-condition-format-control
-                                                     c)
-                                                   "~@?")
-                                      (simple-condition-format-arguments c)
-                                      "~:@_in ~S" rest))))))))
+                        (apply #'syntax-error name
+                               (concatenate 'string
+                                            (simple-condition-format-control c)
+                                            "~@?")
+                               (append (simple-condition-format-arguments c)
+                                       (list "~:@_in ~S" rest))))))))))
 
 (defun +-checker (name cont)
   (lambda (arg)
@@ -609,12 +608,11 @@
         (syntax-error name "Require CONS but ~S" arg)
         (handler-case (mapc cont arg)
           (syntax-error (c)
-            (syntax-error name
-                          (concatenate 'string
-                                       (simple-condition-format-control c)
-                                       "~@?")
-                          (simple-condition-format-arguments c) "~:@_in ~S"
-                          arg))
+            (apply #'syntax-error name
+                   (concatenate 'string (simple-condition-format-control c)
+                                "~@?")
+                   (append (simple-condition-format-arguments c)
+                           (list "~:@_in ~S" arg))))
           (:no-error (&rest args)
             (declare (ignore args))
             nil)))))
