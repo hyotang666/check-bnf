@@ -109,32 +109,36 @@
 
 ; When expected T, efficient code is generated.
 #?(CHECK-BNF () ((OPTION* KEYWORD T)))
-:expanded-to (LET ((check-bnf::*WHOLE* NIL) (check-bnf::*BNF* '((OPTION* KEYWORD T))))
-               (LABELS ((OPTION* (OPTION*)
-                          (IF (TYPEP OPTION* '(AND ATOM (NOT NULL)))
-                              (let ((check-bnf::*default-condition* 'check-bnf::violate-list))
-                                (SYNTAX-ERROR 'OPTION* "Require LIST but ~S."
-                                              OPTION*))
-                              (PROGN
-                               (check-bnf::CHECK-LENGTH OPTION* '(KEYWORD T) 'OPTION*)
-                               (LOOP :FOR args :ON OPTION* :BY #'CDDR
-                                     :for (G11516 G11517)
-                                         := (if (typep args '(cons * (cons * *)))
-                                              args
-                                              (let ((check-bnf::*default-condition*
-                                                      'check-bnf::may-syntax-error))
-                                                (syntax-error 'option* "May length mismatch." args)))
-                                     :DO (MULTIPLE-VALUE-CALL
-                                             (check-bnf::RESIGNALER 'OPTION* args)
-                                           (check-bnf::CAPTURE-SYNTAX-ERROR
-                                            (UNLESS (TYPEP G11516 'KEYWORD)
-                                              (SYNTAX-ERROR 'OPTION*
-                                                            "but ~S, it is type-of ~S"
-                                                            G11516
-                                                            (TYPE-OF
-                                                             G11516))))
-                                           (check-bnf::IGNORED G11517)))))))
-                 (OPTION* OPTION*)))
+:expanded-to
+(LET ((check-bnf::*WHOLE* NIL) (check-bnf::*BNF* '((OPTION* KEYWORD T))))
+  (LABELS ((OPTION* (OPTION*)
+             (IF (TYPEP OPTION* '(AND ATOM (NOT NULL)))
+                 (let ((check-bnf::*default-condition* 'check-bnf::violate-list))
+                   (SYNTAX-ERROR 'OPTION* "Require LIST but ~S."
+                                 OPTION*))
+                 (LOOP :FOR args :ON OPTION* :BY #'CDDR
+                       :for (G11516 G11517)
+                           := (if (typep args '(cons * (cons * *)))
+                                args
+                                (let ((check-bnf::*default-condition*
+                                        'check-bnf::may-syntax-error))
+                                  (syntax-error 'option*
+                                                "Length mismatch. Lack last ~{~S~^ ~} of ~S~:@_~S"
+                                                (subseq '(keyword t)
+                                                        (mod (length args) 2))
+                                                '(keyword t)
+                                                args)))
+                       :DO (MULTIPLE-VALUE-CALL
+                               (check-bnf::RESIGNALER 'OPTION* args)
+                             (check-bnf::CAPTURE-SYNTAX-ERROR
+                              (UNLESS (TYPEP G11516 'KEYWORD)
+                                (SYNTAX-ERROR 'OPTION*
+                                              "but ~S, it is type-of ~S"
+                                              G11516
+                                              (TYPE-OF
+                                               G11516))))
+                             (check-bnf::IGNORED G11517))))))
+    (OPTION* OPTION*)))
 
 ; If you do not like names var as XXX*, you can specify alias.
 #?(let ((vars '(symbol)))
@@ -172,7 +176,7 @@
                              in (\"not-key\" 2)"
                              (type-of "not-key")))))
 
-#?(let ((var* '(not "ballanced" plist)))
+#?(let ((var* '(:not "ballanced" :plist)))
     (check-bnf ()
       ((var* keyword string))))
 :invokes-debugger syntax-error
@@ -181,7 +185,7 @@
             (string= (princ-to-string condition)
                      (format nil "VAR := { KEYWORD STRING }*~2%~
                              Length mismatch. Lack last STRING of (KEYWORD STRING)~%~
-                             (NOT \"ballanced\" PLIST)"))))
+                             (:PLIST)"))))
 
 ; e.g. specify for alist.
 #?(let ((var* '((:key "value") (:key2 "value2"))))

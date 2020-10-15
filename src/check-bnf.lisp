@@ -101,6 +101,11 @@
        (declare (ignore args))
        nil)))
 
+(defun at-least-n-cons (n)
+  (if (zerop n)
+      '*
+      `(cons * ,(at-least-n-cons (1- n)))))
+
 ;;;; SPEC-INFER
 
 (defun t-p (thing &optional (*bnf* *bnf*))
@@ -336,15 +341,6 @@
           (syntax-error ',name "Require LIST but ~S." ,name))
         ,(<*form-body> name spec+))))
 
-(defun check-length (actual spec name)
-  (let ((mod (mod (length actual) (length spec))))
-    (unless (zerop mod)
-      (restart-case (let ((*default-condition* 'length-mismatch))
-                      (syntax-error name
-                                    "Length mismatch. Lack last ~{~S~^ ~} of ~S~:@_~S"
-                                    (subseq spec mod) spec actual))
-        (continue ())))))
-
 (defun resignaler (name actual-args)
   (lambda (&rest conditions)
     (when (find-if (lambda (x) (typep x 'syntax-error)) conditions)
@@ -374,27 +370,28 @@
                   :collect `(ignored ,g))))
     (if (null (remove 'ignored forms :key #'car))
         nil
-        `(progn
-          ,@(when (< 1 length)
-              `((check-length ,name ',spec+ ',name)))
-          (loop :for ,args :on ,name
-                     :by ,(let ((length (length spec+)))
-                            (case length
-                              (1 '#'cdr)
-                              (2 '#'cddr)
-                              (3 '#'cdddr)
-                              (4 '#'cddddr)
-                              (otherwise
-                               `(lambda (list) (nthcdr ,length list)))))
-                :for ,gsyms
-                     := ,(if (< 1 length)
-                             `(if (typep ,args '(cons * (cons * *))) ; at-least-two-elt-p
-                                  ,args
-                                  (let ((*default-condition* 'may-syntax-error))
-                                    (syntax-error ',name "May length mismatch."
-                                                  ,args)))
-                             args)
-                :do (multiple-value-call (resignaler ',name ,args) ,@forms))))))
+        `(loop :for ,args :on ,name
+                    :by ,(let ((length (length spec+)))
+                           (case length
+                             (1 '#'cdr)
+                             (2 '#'cddr)
+                             (3 '#'cdddr)
+                             (4 '#'cddddr)
+                             (otherwise
+                              `(lambda (list) (nthcdr ,length list)))))
+               :for ,gsyms
+                    := ,(if (< 1 length)
+                            `(if (typep ,args ',(at-least-n-cons length))
+                                 ,args
+                                 (let ((*default-condition* 'may-syntax-error))
+                                   (syntax-error ',name
+                                                 "Length mismatch. Lack last ~{~S~^ ~} of ~S~:@_~S"
+                                                 (subseq ',spec+
+                                                         (mod (length ,args)
+                                                              ,length))
+                                                 ',spec+ ,args)))
+                            args)
+               :do (multiple-value-call (resignaler ',name ,args) ,@forms)))))
 
 ;; <LOCAL-CHECK-FORM>
 
@@ -477,11 +474,7 @@
                        (push "dummy" actual)
                        (error c))))))
             ((#\*)
-             (handler-case
-                 (if (cdr specs)
-                     (handler-bind ((length-mismatch #'continue))
-                       (local-check actual elt))
-                     (local-check actual elt))
+             (handler-case (local-check actual elt)
                (may-syntax-error (condition)
                  (if (cdr specs)
                      (setf actual
