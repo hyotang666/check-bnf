@@ -53,7 +53,8 @@
       (check-bnf::*bnf* '((a* t))))
   (labels ((a* (a*)
                (if (typep a* '(and atom (not null)))
-                 (syntax-error 'a* "Require LIST but ~S." a*)
+                 (let ((check-bnf::*default-condition* 'check-bnf::violate-list))
+                   (syntax-error 'a* "Require LIST but ~S." a*))
                  nil)))
     (a* a*)))
 
@@ -111,14 +112,15 @@
 :expanded-to (LET ((check-bnf::*WHOLE* NIL) (check-bnf::*BNF* '((OPTION* KEYWORD T))))
                (LABELS ((OPTION* (OPTION*)
                           (IF (TYPEP OPTION* '(AND ATOM (NOT NULL)))
-                              (SYNTAX-ERROR 'OPTION* "Require LIST but ~S."
-                                            OPTION*)
+                              (let ((check-bnf::*default-condition* 'check-bnf::violate-list))
+                                (SYNTAX-ERROR 'OPTION* "Require LIST but ~S."
+                                              OPTION*))
                               (PROGN
                                (check-bnf::CHECK-LENGTH OPTION* '(KEYWORD T) 'OPTION*)
-                               (LOOP :FOR (G11516
-                                           G11517) :ON OPTION* :BY #'CDDR
+                               (LOOP :FOR args :ON OPTION* :BY #'CDDR
+                                     :for (G11516 G11517) := args
                                      :DO (MULTIPLE-VALUE-CALL
-                                             (check-bnf::RESIGNALER 'OPTION* OPTION*)
+                                             (check-bnf::RESIGNALER 'OPTION* args)
                                            (check-bnf::CAPTURE-SYNTAX-ERROR
                                             (UNLESS (TYPEP G11516 'KEYWORD)
                                               (SYNTAX-ERROR 'OPTION*
@@ -150,7 +152,7 @@
             (string= (princ-to-string condition)
                      (format nil "VAR := KEYWORD INTEGER*~2%~
                              but \"not integer\", it is type-of ~S~%  ~
-                             in (:KEY 2 :KEY2 \"not integer\")"
+                             in (:KEY2 \"not integer\")"
                              (type-of "not integer")))))
 
 #?(let ((var* '(:key 1 "not-key" 2)))
@@ -162,7 +164,7 @@
             (string= (princ-to-string condition)
                      (format nil "VAR := KEYWORD INTEGER*~2%~
                              but \"not-key\", it is type-of ~S~%  ~
-                             in (:KEY 1 \"not-key\" 2)"
+                             in (\"not-key\" 2)"
                              (type-of "not-key")))))
 
 #?(let ((var* '(not "ballanced" plist)))
@@ -191,7 +193,7 @@
             (string= (princ-to-string condition)
                      (format nil "VAR := (KEYWORD STRING)*~2%~
                              but :NOT-STRING, it is type-of KEYWORD~%  ~
-                             in ((:KEY \"value\") (:KEY2 :NOT-STRING))"))))
+                             in ((:KEY2 :NOT-STRING))"))))
 
 #?(let ((var* '((:key "value") (:not "ballanced" clause))))
     (check-bnf ()
@@ -202,7 +204,7 @@
             (string= (princ-to-string condition)
                      (format nil "VAR := (KEYWORD STRING)*~2%~
                              Length mismatch. (KEYWORD STRING) but (:NOT \"ballanced\" CLAUSE)~%  ~
-                             in ((:KEY \"value\") (:NOT \"ballanced\" CLAUSE))"))))
+                             in ((:NOT \"ballanced\" CLAUSE))"))))
 
 #?(let ((var* '((:key "value") (:not-ballanced))))
     (check-bnf ()
@@ -213,7 +215,7 @@
             (string= (princ-to-string condition)
                      (format nil "VAR := (KEYWORD STRING)*~2%~
                              Length mismatch. Lack last STRING of (KEYWORD STRING)~%  ~
-                             in ((:KEY \"value\") (:NOT-BALLANCED))"))))
+                             in ((:NOT-BALLANCED))"))))
 
 ; of course dotted are valid.
 #?(let ((var* '((:key . "value"))))
@@ -408,6 +410,33 @@
                              but \"not option nor other*\", it is type-of ~S~%  ~
                              in (\"not option nor other*\" AND OTHERS)"
                              (type-of "not option nor other*")))))
+
+; Key value pair in heads.
+#?(LET ((ARGS '(:KEY 1 :KEY 2 "doc")))
+    (CHECK-BNF ()
+      ((ARGS (OPTION* DOC?))
+       (OPTION* KEYWORD INTEGER)
+       (DOC? STRING))))
+=> NIL
+
+#?(LET ((ARGS '(:KEY 1 :KEY 2)))
+    (CHECK-BNF ()
+      ((ARGS (OPTION* DOC?))
+       (OPTION* KEYWORD INTEGER)
+       (DOC? STRING))))
+=> NIL
+
+#?(LET ((ARGS '(:KEY 1 :KEY 2 not-string)))
+    (CHECK-BNF ()
+      ((ARGS (OPTION* DOC?))
+       (OPTION* KEYWORD INTEGER)
+       (DOC? STRING))))
+:invokes-debugger syntax-error
+,:test (lambda (condition)
+         (& #-clisp ; #1
+            (string= (princ-to-string condition)
+                     (format nil "DOC := STRING?~2%~
+                             but NOT-STRING, it is type-of SYMBOL"))))
 
 ;;;; exceptional-situations:
 ; every name should not conflicts cl symbol.
