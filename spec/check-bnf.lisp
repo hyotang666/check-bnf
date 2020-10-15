@@ -150,7 +150,7 @@
 ,:test (lambda (condition)
          (& #-clisp ; #1
             (string= (princ-to-string condition)
-                     (format nil "VAR := KEYWORD INTEGER*~2%~
+                     (format nil "VAR := { KEYWORD INTEGER }*~2%~
                              but \"not integer\", it is type-of ~S~%  ~
                              in (:KEY2 \"not integer\")"
                              (type-of "not integer")))))
@@ -162,7 +162,7 @@
 ,:test (lambda (condition)
          (& #-clisp ; #1
             (string= (princ-to-string condition)
-                     (format nil "VAR := KEYWORD INTEGER*~2%~
+                     (format nil "VAR := { KEYWORD INTEGER }*~2%~
                              but \"not-key\", it is type-of ~S~%  ~
                              in (\"not-key\" 2)"
                              (type-of "not-key")))))
@@ -174,7 +174,7 @@
 ,:test (lambda (condition)
          (& #-clisp ; #1
             (string= (princ-to-string condition)
-                     (format nil "VAR := KEYWORD STRING*~2%~
+                     (format nil "VAR := { KEYWORD STRING }*~2%~
                              Length mismatch. Lack last STRING of (KEYWORD STRING)~%~
                              (NOT \"ballanced\" PLIST)"))))
 

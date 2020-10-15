@@ -175,10 +175,21 @@
         (formatter
          #.(apply #'concatenate 'string
                   (alexandria:flatten
-                    (list "~{" ; iterate.
-                          "~/check-bnf:pprint-def-elt/~^ " ; each elt.
-                          "~}"))))
-        stream exp)))
+                    (list "~:[" ; if one elt.
+                          (list "~{" ; iterate.
+                                "~/check-bnf:pprint-def-elt/~^ " ; each elt.
+                                "~}")
+                          "~;" ; else.
+                          ;; some elements.
+                          (list "~@<" ; pprint-logical-block.
+                                "{ " ; prefix.
+                                (list "~{" ; iterate.
+                                      "~/check-bnf:pprint-def-elt/ ~_~^" ; each-elt
+                                      "~}")
+                                "}" ; suffix.
+                                "~:>")
+                          "~]"))))
+        stream (cdr exp) exp)))
 
 (defun definitions (thing bnf)
   (let ((acc))
