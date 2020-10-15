@@ -12,6 +12,12 @@
 
 (in-package :check-bnf)
 
+;;;; TYPES
+
+(deftype type-specifier () '(or symbol cons))
+
+(deftype expression () t)
+
 ;;;; SPECIAL VARIABLES
 
 (defvar *whole* nil)
@@ -61,7 +67,77 @@
          :whole *whole*
          :definitions *bnf*))
 
-;;;; PRETTY-PRINTER.
+;;;; UTILITIES
+
+(defun cons-equal (list1 list2) (tree-equal list1 list2 :test (constantly t)))
+
+(defun ignored (arg) (declare (ignore arg)) nil)
+
+(defun extended-marker (name)
+  (let ((char (char (symbol-name name) (1- (length (symbol-name name))))))
+    (find char "+*?")))
+
+(declaim
+ (ftype (function (t) (values (or null symbol) (or null character) &optional))
+        but-extended-marker))
+
+(defun but-extended-marker (thing)
+  (if (not (symbolp thing))
+      (values nil nil)
+      (let ((mark (extended-marker thing)))
+        (case mark
+          ((#\? #\* #\+)
+           (let ((name (symbol-name thing)))
+             (values (intern (subseq name 0 (1- (length name)))
+                             (symbol-package thing))
+                     mark)))
+          (otherwise (values thing nil))))))
+
+(defmacro capture-syntax-error (form)
+  `(handler-case ,form
+     (syntax-error (c)
+       c)
+     (:no-error (&rest args)
+       (declare (ignore args))
+       nil)))
+
+;;;; SPEC-INFER
+
+(defun t-p (thing &optional (*bnf* *bnf*))
+  (let ((seen))
+    (labels ((rec (thing)
+               (let ((spec (assoc thing *bnf*)))
+                 (if spec
+                     (if (find (car spec) seen)
+                         nil
+                         (progn
+                          (push (car spec) seen)
+                          (every #'rec (cdr spec))))
+                     (cond
+                       ((millet:type-specifier-p thing)
+                        (if (typep thing '(cons (eql or) *))
+                            (some #'rec (cdr thing))
+                            (eq t (millet:type-expand thing))))
+                       ((atom thing)
+                        (multiple-value-bind (but mark)
+                            (but-extended-marker thing)
+                          (if (null (assoc but *bnf*))
+                              (error "NIY")
+                              (when mark
+                                (t-p but)))))
+                       ((typep thing '(cons (eql or) *))
+                        (some #'rec (cdr thing)))
+                       ((consp thing)
+                        (do ((spec thing (cdr spec)))
+                            ((atom spec)
+                             (if (null spec)
+                                 t
+                                 (t-p spec)))
+                          (unless (t-p (car spec))
+                            (return nil)))))))))
+      (rec thing))))
+
+;;;; CONDITION REPORTER.
 
 (defun pprint-def-elt (stream exp &rest noise)
   (declare (ignore noise))
@@ -163,38 +239,6 @@
               (list num name (cdr definition) mark)))
           definitions)))))
 
-(declaim
- (ftype (function (t) (values (or null symbol) (or null character) &optional))
-        but-extended-marker))
-
-(defun but-extended-marker (thing)
-  (if (not (symbolp thing))
-      (values nil nil)
-      (let ((mark (extended-marker thing)))
-        (case mark
-          ((#\? #\* #\+)
-           (let ((name (symbol-name thing)))
-             (values (intern (subseq name 0 (1- (length name)))
-                             (symbol-package thing))
-                     mark)))
-          (otherwise (values thing nil))))))
-
-(defun extended-marker (name)
-  (let ((char (char (symbol-name name) (1- (length (symbol-name name))))))
-    (find char "+*?")))
-
-;;;; TYPES
-
-(deftype type-specifier () '(or symbol cons))
-
-(deftype expression () t)
-
-;;;; UTILITY
-
-(defun cons-equal (list1 list2) (tree-equal list1 list2 :test (constantly t)))
-
-(defun ignored (arg) (declare (ignore arg)) nil)
-
 ;;;; CHECK-BNF
 
 (defmacro check-bnf (&whole whole (&key ((:whole whole?))) &body def+)
@@ -248,6 +292,8 @@
       ((cons * null) (car forms))
       (otherwise `(progn ,@forms)))))
 
+;;; <LOCAL-FUN>
+
 (defun <local-fun> (clause)
   (destructuring-bind
       (var-spec . spec+)
@@ -257,6 +303,8 @@
         (#\+ (<+form> name spec+))
         (#\* (<*form> name spec+))
         (otherwise (<require-form> name spec+))))))
+
+;; <REQUIRE-FORM>
 
 (defun <require-form> (name spec+)
   (if (cdr spec+)
@@ -268,9 +316,7 @@
                 (list form)
                 `((declare (ignore ,name)) nil))))))
 
-(defun <check-type-form> (name var type-specifier)
-  `(unless (typep ,var ',type-specifier)
-     (syntax-error ',name "but ~S, it is type-of ~S" ,var (type-of ,var))))
+;; <*FORM>
 
 (defun <*form> (name spec+)
   `(,name (,name)
@@ -303,14 +349,6 @@
                                               c))
                       "~2I~:@_in ~S~I" actual-args)))))
 
-(defmacro capture-syntax-error (form)
-  `(handler-case ,form
-     (syntax-error (c)
-       c)
-     (:no-error (&rest args)
-       (declare (ignore args))
-       nil)))
-
 (defun <*form-body> (name spec+)
   (let* ((length (length spec+))
          (gsyms (alexandria:make-gensym-list length))
@@ -340,12 +378,18 @@
                 :for ,gsyms := ,args
                 :do (multiple-value-call (resignaler ',name ,args) ,@forms))))))
 
+;; <LOCAL-CHECK-FORM>
+
 (defun <local-check-form> (name var spec)
   (cond
     ((millet:type-specifier-p spec) (<local-type-check-form> name var spec))
     ((atom spec) (<local-atom-check-form> name var spec))
     ((typep spec '(cons (eql or) *)) (<local-or-check-form> name var spec))
     ((consp spec) (<local-cons-check-form> name var spec))))
+
+(defun <check-type-form> (name var type-specifier)
+  `(unless (typep ,var ',type-specifier)
+     (syntax-error ',name "but ~S, it is type-of ~S" ,var (type-of ,var))))
 
 (defun <local-type-check-form> (name var spec)
   (cond ((t-p spec) nil)
@@ -519,6 +563,8 @@
                  (push "dummy" value))) ; as rewind.
              (local-check (car value) elt)))))))
 
+;; <+FORM>
+
 (defun <+form> (name spec+)
   (let ((*form (<*form-body> name spec+)))
     `(,name (,name)
@@ -558,42 +604,6 @@
           (:no-error (&rest args)
             (declare (ignore args))
             nil)))))
-
-;;;; SPEC-INFER
-
-(defun t-p (thing &optional (*bnf* *bnf*))
-  (let ((seen))
-    (labels ((rec (thing)
-               (let ((spec (assoc thing *bnf*)))
-                 (if spec
-                     (if (find (car spec) seen)
-                         nil
-                         (progn
-                          (push (car spec) seen)
-                          (every #'rec (cdr spec))))
-                     (cond
-                       ((millet:type-specifier-p thing)
-                        (if (typep thing '(cons (eql or) *))
-                            (some #'rec (cdr thing))
-                            (eq t (millet:type-expand thing))))
-                       ((atom thing)
-                        (multiple-value-bind (but mark)
-                            (but-extended-marker thing)
-                          (if (null (assoc but *bnf*))
-                              (error "NIY")
-                              (when mark
-                                (t-p but)))))
-                       ((typep thing '(cons (eql or) *))
-                        (some #'rec (cdr thing)))
-                       ((consp thing)
-                        (do ((spec thing (cdr spec)))
-                            ((atom spec)
-                             (if (null spec)
-                                 t
-                                 (t-p spec)))
-                          (unless (t-p (car spec))
-                            (return nil)))))))))
-      (rec thing))))
 
 ;;;; PRETY-PRINTER.
 
