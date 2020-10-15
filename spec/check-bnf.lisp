@@ -437,6 +437,19 @@
        (B INTEGER))))
 => NIL
 
+#?(LET ((VAR '(SYM SYM 1)))
+    (CHECK-BNF ()
+      ((VAR (A* B*))
+       (A SYMBOL)
+       (B INTEGER))))
+=> NIL
+#?(LET ((VAR '(SYM SYM 1 2)))
+    (CHECK-BNF ()
+      ((VAR (A* B*))
+       (A SYMBOL)
+       (B INTEGER))))
+=> NIL
+
 ; Key value pair in heads.
 #?(LET ((ARGS '(:KEY 1 :KEY 2 "doc")))
     (CHECK-BNF ()
@@ -673,16 +686,3 @@
 :outputs "(CHECK-BNF ()
   (A
    B))"
-
-#?(LET ((VAR '(SYM)))
-    (CHECK-BNF ()
-      ((VAR (A* B*))
-       (A SYMBOL)
-       (B INTEGER))))
-=> NIL
-#?(LET ((VAR '(SYM SYM)))
-    (CHECK-BNF ()
-      ((VAR (A* B*))
-       (A SYMBOL)
-       (B INTEGER))))
-=> NIL

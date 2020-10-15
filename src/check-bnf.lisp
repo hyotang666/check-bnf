@@ -591,17 +591,17 @@
     (if (typep arg '(and atom (not null)))
         (let ((*default-condition* 'violate-list))
           (syntax-error name "Require LIST but ~S." arg))
-        (handler-case (mapc cont arg)
-          (syntax-error (c)
-            (syntax-error name
-                          (concatenate 'string
-                                       (simple-condition-format-control c)
-                                       "~@?")
-                          (simple-condition-format-arguments c) "~:@_in ~S"
-                          arg))
-          (:no-error (&rest args)
-            (declare (ignore args))
-            nil)))))
+        (loop :for rest :on arg
+              :do (handler-case (funcall cont (car rest))
+                    (syntax-error (c)
+                      (let ((*default-condition* 'may-syntax-error))
+                        (syntax-error name
+                                      (concatenate 'string
+                                                   (simple-condition-format-control
+                                                     c)
+                                                   "~@?")
+                                      (simple-condition-format-arguments c)
+                                      "~:@_in ~S" rest))))))))
 
 (defun +-checker (name cont)
   (lambda (arg)
