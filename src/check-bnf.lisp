@@ -361,6 +361,12 @@
                  (mapcar (lambda (spec) (<local-check-form> name var spec))
                          (cdr spec)))))))
 
+;;;; SPEC the intermediate object.
+
+(defstruct (spec (:constructor spec (name checker)))
+  (name (error "Name is Required for spec.") :type symbol :read-only t)
+  (checker (error "Checker is Required for spec.") :type function :read-only t))
+
 (defun check-cons (actual-args specs name)
   (do ((actual actual-args (cdr actual))
        (specs specs (cdr specs)))
@@ -370,16 +376,16 @@
          ((atom atom) (local-check actual specs))
          ((null (cons * null))
           (let ((elt (car specs)))
-            (if (vectorp elt)
-                (case (extended-marker (elt elt 0))
+            (if (spec-p elt)
+                (case (extended-marker (spec-name elt))
                   ((#\? #\*) (ignore-errors (local-check actual elt)))
                   (otherwise
                    (syntax-error name
                                  "Length mismatch. Lack last ~{~S~^ ~} of ~S"
                                  (mapcar
                                    (lambda (x)
-                                     (if (vectorp x)
-                                         (elt x 0)
+                                     (if (spec-p x)
+                                         (spec-name x)
                                          x))
                                    specs)
                                  name)))
@@ -394,8 +400,8 @@
          (otherwise
           (syntax-error name "Length mismatch. ~S but ~S" name actual-args))))
     (let ((elt (car specs)))
-      (if (vectorp elt)
-          (case (extended-marker (elt elt 0))
+      (if (spec-p elt)
+          (case (extended-marker (spec-name elt))
             (#\?
              (handler-case (local-check (car actual) elt)
                (error ()
@@ -416,13 +422,13 @@
         ((atom spec)
          (multiple-value-bind (but mark)
              (but-extended-marker spec)
-           `(vector ',spec
-                    ,(if (and (find mark "+*?") (assoc but *bnf*))
-                         (ecase mark
-                           (#\+ `(+-checker ',name #',but))
-                           (#\* `(*-checker ',name #',but))
-                           (#\? `#',but))
-                         `#',spec))))
+           `(spec ',spec
+                  ,(if (and (find mark "+*?") (assoc but *bnf*))
+                       (ecase mark
+                         (#\+ `(+-checker ',name #',but))
+                         (#\* `(*-checker ',name #',but))
+                         (#\? `#',but))
+                       `#',spec))))
         ((typep spec '(cons (eql or) *)) (error "NIY"))
         ((consp spec)
          `(cons ,(<spec-form> (car spec) name)
@@ -440,7 +446,7 @@
      (unless (eql t (millet:type-expand spec))
        (unless (typep name spec)
          (syntax-error name "but ~S, it is type-of ~S" name (type-of name)))))
-    ((vectorp spec) (funcall (elt spec 1) name))
+    ((spec-p spec) (funcall (spec-checker spec) name))
     ((typep spec '(cons (eql or) *))
      (loop :for (spec+ . rest) :on (cdr spec)
            :if (null rest)
