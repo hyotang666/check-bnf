@@ -74,7 +74,8 @@
 (defun ignored (arg) (declare (ignore arg)) nil)
 
 (defun extended-marker (name)
-  (let ((char (char (symbol-name name) (1- (length (symbol-name name))))))
+  (let* ((length (length (symbol-name name)))
+         (char (and (< 1 length) (char (symbol-name name) (1- length)))))
     (find char "+*?")))
 
 (declaim
