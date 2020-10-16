@@ -428,17 +428,17 @@
 (defun <local-or-check-form> (name var spec)
   (if (t-p spec)
       nil
-      `(tagbody
-         (or ,@(loop :for (spec . rest) :on (cdr spec)
-                     :collect `(handler-case
-                                   ,(<local-check-form> name var spec)
-                                 (syntax-error ()
-                                   ,(if rest
-                                        nil
-                                        `(syntax-error ',name "but ~S" ,var)))
-                                 (:no-error (&rest args)
-                                   (declare (ignore args))
-                                   t)))))))
+      `(block nil
+         (tagbody
+          ,@(loop :for (spec . rest) :on (cdr spec)
+                  :collect `(handler-case ,(<local-check-form> name var spec)
+                              (syntax-error ()
+                                ,(if rest
+                                     nil
+                                     `(syntax-error ',name "but ~S" ,var)))
+                              (:no-error (&rest args)
+                                (declare (ignore args))
+                                (return))))))))
 
 ;;;; SPEC the intermediate object.
 
