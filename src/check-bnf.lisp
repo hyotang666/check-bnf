@@ -503,22 +503,37 @@
            (check-cons ,var ,(<spec-form> spec name) ',spec))))
 
 (defun <spec-form> (spec name)
-  (cond ((null spec) nil)
-        ((millet:type-specifier-p spec) `',spec)
-        ((atom spec)
-         (multiple-value-bind (but mark)
-             (but-extended-marker spec)
-           `(spec ',spec
-                  ,(if (and (find mark "+*?") (assoc but *bnf*))
-                       (ecase mark
-                         (#\+ `(+-checker ',name #',but))
-                         (#\* `(*-checker ',name #',but))
-                         (#\? `#',but))
-                       `#',spec))))
-        ((typep spec '(cons (eql or) *)) (error "NIY"))
-        ((consp spec)
-         `(cons ,(<spec-form> (car spec) name)
-                ,(<spec-form> (cdr spec) name)))))
+  (flet ((may-checker-form (thing)
+           (if (t-p thing)
+               `(constantly nil)
+               `(lambda (x) ,(<check-type-form> spec 'x thing)))))
+    (cond ((null spec) nil)
+          ((millet:type-specifier-p spec) `',spec)
+          ((atom spec)
+           (multiple-value-bind (but mark)
+               (but-extended-marker spec)
+             `(spec ',spec
+                    ,(if (find mark "+*?")
+                         (if (assoc but *bnf*)
+                             (ecase mark
+                               (#\+ `(+-checker ',name #',but))
+                               (#\* `(*-checker ',name #',but))
+                               (#\? `#',but))
+                             (if (millet:type-specifier-p but)
+                                 (ecase mark
+                                   (#\+
+                                    `(+-checker ',name
+                                                ,(may-checker-form but)))
+                                   (#\*
+                                    `(*-checker ',name
+                                                ,(may-checker-form but)))
+                                   (#\? (may-checker-form but)))
+                                 `#',spec))
+                         `#',spec))))
+          ((typep spec '(cons (eql or) *)) (error "NIY"))
+          ((consp spec)
+           `(cons ,(<spec-form> (car spec) name)
+                  ,(<spec-form> (cdr spec) name))))))
 
 (declaim
  (ftype (function (t t)

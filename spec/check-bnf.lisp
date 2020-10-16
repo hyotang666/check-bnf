@@ -619,6 +619,19 @@
                              but \"not symbol\", it is type-of ~S"
                              (type-of "not symbol")))))
 
+;;;; Practical case examples.
+;; deftype.
+#?(let ((name 'name)
+        (lambda-list '())
+        (body '("doc" t)))
+    (check-bnf ()
+      ((name (and symbol (not (or keyword boolean)))))
+      ((lambda-list list))
+      ((body (doc? declaration* expression*))
+       (doc? string)
+       (declaration* ((eql declare) t*)))))
+=> NIL
+
 (requirements-about expression :doc-type type)
 ;;;; description:
 ;;;; compound type specifier kind:
