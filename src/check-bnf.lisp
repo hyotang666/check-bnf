@@ -427,18 +427,16 @@
   (if (t-p spec)
       nil
       `(tagbody
-         (or ,@(maplist
-                 (lambda (forms)
-                   `(handler-case ,(car forms)
-                      (syntax-error ()
-                        ,(if (cdr forms)
-                             nil
-                             `(syntax-error ',name "but ~S" ,var)))
-                      (:no-error (&rest args)
-                        (declare (ignore args))
-                        t)))
-                 (mapcar (lambda (spec) (<local-check-form> name var spec))
-                         (cdr spec)))))))
+         (or ,@(loop :for (spec . rest) :on (cdr spec)
+                     :collect `(handler-case
+                                   ,(<local-check-form> name var spec)
+                                 (syntax-error ()
+                                   ,(if rest
+                                        nil
+                                        `(syntax-error ',name "but ~S" ,var)))
+                                 (:no-error (&rest args)
+                                   (declare (ignore args))
+                                   t)))))))
 
 ;;;; SPEC the intermediate object.
 
