@@ -127,7 +127,9 @@
                         (multiple-value-bind (but mark)
                             (but-extended-marker thing)
                           (if (null (assoc but *bnf*))
-                              (error "NIY")
+                              (if (char= #\? mark)
+                                  (t-p but)
+                                  (error "NIY"))
                               (when mark
                                 (t-p but)))))
                        ((typep thing '(cons (eql or) *))

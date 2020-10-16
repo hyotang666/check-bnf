@@ -632,6 +632,12 @@
        (declaration* ((eql declare) t*)))))
 => NIL
 
+#?(let ((body '("doc" t)))
+    (check-bnf ()
+      ((body (string? declaration* expression*))
+       (declaration* ((eql declare) t*)))))
+=> NIL
+
 (requirements-about expression :doc-type type)
 ;;;; description:
 ;;;; compound type specifier kind:
