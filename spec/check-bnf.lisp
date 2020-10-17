@@ -725,3 +725,104 @@
 :outputs "(CHECK-BNF ()
   (A
    B))"
+
+(requirements-about <LAMBDA-LIST> :doc-type function)
+
+;;;; Description:
+
+#+syntax (<LAMBDA-LIST> <lambda-list>) ; => result
+
+;;;; Arguments and Values:
+
+; <lambda-list> := t as tha form that is lambda list.
+#?(<LAMBDA-LIST> NIL) => NIL
+
+; result := NULL or an error.
+
+;;;; Affected By:
+; none.
+
+;;;; Side-Effects:
+; none.
+
+;;;; Notes:
+; This does not warrant the <lambda-list> is valid.
+#?(<LAMBDA-LIST> '((VAR T))) => NIL
+#?(<LAMBDA-LIST> '((VAR T VAR2))) => NIL
+
+;;;; Exceptional-Situations:
+; When the form is not lambda-list an error is signaled.
+
+;;;; TESTS.
+#?(<LAMBDA-LIST> :NOT-LIST) :signals SYNTAX-ERROR
+#?(<LAMBDA-LIST> '(:NOT-VAR)) :signals SYNTAX-ERROR
+#?(<LAMBDA-LIST> '(("not init-form var" :DUMMY))) :signals SYNTAX-ERROR
+#?(<LAMBDA-LIST> '((LESS-ELT-FOR-INIT-FORM))) :signals SYNTAX-ERROR
+#?(<LAMBDA-LIST> '((VAR T "not supplied var"))) :signals SYNTAX-ERROR
+
+(requirements-about <FUNCTION-TYPE> :doc-type function)
+
+;;;; Description:
+
+#+syntax (<FUNCTION-TYPE> <function-type>) ; => result
+
+;;;; Arguments and Values:
+
+; <function-type> := t as the form that is function form.
+
+; result := NULL or an error.
+
+;;;; Affected By:
+; none.
+
+;;;; Side-Effects:
+; none.
+
+;;;; Notes:
+; This does not warrant the <function-type> is valid.
+#?(<FUNCTION-TYPE> '(FUNCTION (&KEY (NOT-KEYWORD INTEGER)) *)) => NIL
+
+;;;; Exceptional-Situations:
+
+;;;; Tests.
+#?(<FUNCTION-TYPE> 'FUNCTION) => NIL
+#?(<FUNCTION-TYPE> :INVALID) :signals SYNTAX-ERROR
+#?(<FUNCTION-TYPE> '(FUNCTION * *)) => NIL
+#?(<FUNCTION-TYPE> '(FUNCTION :INVALID-AS-LAMBDA-LIST)) :signals SYNTAX-ERROR
+#?(<FUNCTION-TYPE> '(FUNCTION ("not lambda elt") *)) :signals SYNTAX-ERROR
+#?(<FUNCTION-TYPE> '(FUNCTION NIL INTEGER)) => NIL
+#?(<FUNCTION-TYPE> '(FUNCTION NIL (VALUES INTEGER))) => NIL
+#?(<FUNCTION-TYPE> '(FUNCTION NIL (VALUES INTEGER &OPTIONAL))) => NIL
+#?(<FUNCTION-TYPE> '(FUNCTION NIL (VALUES INTEGER FIXNUM &OPTIONAL))) => NIL
+#?(<FUNCTION-TYPE> '(FUNCTION (&KEY (:NAME INTEGER)) *)) => NIL
+
+(requirements-about <DECLARATION> :doc-type function)
+
+;;;; Description:
+
+#+syntax (<DECLARATION> <declaration>) ; => result
+
+;;;; Arguments and Values:
+
+; <declaration> := 
+
+; result := 
+
+;;;; Affected By:
+
+;;;; Side-Effects:
+
+;;;; Notes:
+
+;;;; Exceptional-Situations:
+
+;;;; Examples.
+#?(<DECLARATION> '(DECLARE (IGNORE VAR))) => NIL
+#?(<DECLARATION>
+   '(DECLARE (IGNORE VAR)
+             (TYPE FIXNUM A)))
+=> NIL
+#?(<DECLARATION>
+   '(DECLARE (IGNORE VAR)
+             (:TYPE FIXNUM A)))
+:signals SYNTAX-ERROR

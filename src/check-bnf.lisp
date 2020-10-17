@@ -8,7 +8,13 @@
            ;;;; Condition
            #:syntax-error
            ;;;; Miscellaneous TYPE.
-           #:expression))
+           #:expression)
+  (:export ;;;; DSL
+           #:defbnf
+           ;;;; Native support.
+           #:<lambda-list>
+           #:<function-type>
+           #:<declaration>))
 
 (in-package :check-bnf)
 
@@ -128,7 +134,7 @@
                         (multiple-value-bind (but mark)
                             (but-extended-marker thing)
                           (if (null (assoc but *bnf*))
-                              (if (char= #\? mark)
+                              (if (eql #\? mark)
                                   (t-p but)
                                   (error "NIY"))
                               (when mark
@@ -533,7 +539,8 @@
                                    (#\? (may-checker-form but)))
                                  `#',spec))
                          `#',spec))))
-          ((typep spec '(cons (eql or) *)) (error "NIY"))
+          ((typep spec '(cons (eql or) *))
+           `(lambda (x) ,(<local-or-check-form> name 'x spec)))
           ((consp spec)
            `(cons ,(<spec-form> (car spec) name)
                   ,(<spec-form> (cdr spec) name))))))
@@ -560,7 +567,9 @@
                                    spec spec+)))
            :else
              :do (ignore-errors (local-check name spec+))))
-    ((consp spec) (check-cons name spec spec))))
+    ((consp spec) (check-cons name spec spec))
+    ((functionp spec) (funcall spec name))
+    (t (error "NIY: Name: ~S, Spec ~S" name spec))))
 
 ;; <+FORM>
 

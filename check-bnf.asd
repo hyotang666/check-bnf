@@ -2,7 +2,7 @@
 (in-package :asdf)
 (defsystem "check-bnf"
   :version
-  "7.5.7"
+  "8.0.0"
   :description "Macro arguments checker."
   :author "SATO Shinichi"
   :license "MIT"
@@ -15,7 +15,8 @@
   :pathname
   "src/"
   :components
-  ((:file "check-bnf")))
+  ((:file "check-bnf")
+   (:file "defbnf" :depends-on ("check-bnf"))))
 
 ;;; These forms below are added by JINGOH.GENERATOR.
 ;; Ensure in ASDF for pretty printings.
