@@ -1,4 +1,4 @@
-# CHECK-BNF 7.0.0
+# CHECK-BNF 8.0.0
 ## What is this?
 Macro arguments checker.
 
@@ -59,6 +59,14 @@ Macro `DOC` allows you to do it by read time evaluation and read time labeling.
 A := SYMBOL
 "
 ```
+
+## DEFBNF
+Your macro may have similar syntax e.g. CASE, CCASE, and ECASE.
+In such cases, you can define global BNF by `DEFBNF`.
+
+`DEFBNF` has almost the same syntax as `CHECK-BNF` but except accepts only one definition and alias is invalid.
+
+Currently `<LAMBDA-LIST>`, `<FUNCTION-TYPE>` and `<DECLARATION>` is provided.
 
 ## From developer
 
