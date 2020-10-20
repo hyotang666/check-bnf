@@ -22,7 +22,7 @@
          (& #-clisp
             (string= (princ-to-string condition)
                      (format nil "VAR := SYMBOL~2%~
-                             but \"string\", it is type-of ~S"
+                             VAR: \"string\" comes, it is type-of ~S."
                              (type-of "string")))))
 
 ; CLISP specific guard #1.
@@ -54,7 +54,7 @@
   (labels ((a* (a*)
                (if (typep a* '(and atom (not null)))
                  (let ((check-bnf::*default-condition* 'check-bnf::violate-list))
-                   (syntax-error 'a* "Require LIST but ~S." a*))
+                   (syntax-error 'a* "~A: Require LIST but ~S." 'a* a*))
                  nil)))
     (a* a*)))
 
@@ -94,7 +94,7 @@
          (& #-clisp ; #1
             (string= (princ-to-string condition)
                      (format nil "VAR := SYMBOL*~2%~
-                             but \"string\", it is type-of ~S~%  in (\"string\")"
+                             VAR*: \"string\" comes, it is type-of ~S.~%  in (\"string\")"
                              (type-of "string")))))
 
 #?(let ((var* :not-list))
@@ -105,7 +105,7 @@
          (& #-clisp ; #1
             (string= (princ-to-string condition)
                      (format nil "VAR := SYMBOL*~2%~
-                             Require LIST but :NOT-LIST."))))
+                             VAR*: Require LIST but :NOT-LIST."))))
 
 ; When expected T, efficient code is generated.
 #?(CHECK-BNF () ((OPTION* KEYWORD T)))
@@ -114,7 +114,8 @@
   (LABELS ((OPTION* (OPTION*)
              (IF (TYPEP OPTION* '(AND ATOM (NOT NULL)))
                  (let ((check-bnf::*default-condition* 'check-bnf::violate-list))
-                   (SYNTAX-ERROR 'OPTION* "Require LIST but ~S."
+                   (SYNTAX-ERROR 'OPTION* "~A: Require LIST but ~S."
+                                 'option*
                                  OPTION*))
                  (LOOP :FOR args :ON OPTION* :BY #'CDDR
                        :for (G11516 G11517)
@@ -123,7 +124,8 @@
                                 (let ((check-bnf::*default-condition*
                                         'check-bnf::may-syntax-error))
                                   (syntax-error 'option*
-                                                "Length mismatch. Lack last ~{~S~^ ~} of ~S~:@_~S"
+                                                "~A: Length mismatch. Lack last ~{~S~^ ~} of ~S~:@_~S"
+                                                'option*
                                                 (subseq '(keyword t)
                                                         (mod (length args) 2))
                                                 '(keyword t)
@@ -133,7 +135,8 @@
                              (check-bnf::CAPTURE-SYNTAX-ERROR
                               (UNLESS (TYPEP G11516 'KEYWORD)
                                 (SYNTAX-ERROR 'OPTION*
-                                              "but ~S, it is type-of ~S"
+                                              "~A: ~S comes, it is type-of ~S."
+                                              'option*
                                               G11516
                                               (TYPE-OF
                                                G11516))))
@@ -160,7 +163,7 @@
          (& #-clisp ; #1
             (string= (princ-to-string condition)
                      (format nil "VAR := { KEYWORD INTEGER }*~2%~
-                             but \"not integer\", it is type-of ~S~%  ~
+                             VAR*: \"not integer\" comes, it is type-of ~S.~%  ~
                              in (:KEY2 \"not integer\")"
                              (type-of "not integer")))))
 
@@ -172,7 +175,7 @@
          (& #-clisp ; #1
             (string= (princ-to-string condition)
                      (format nil "VAR := { KEYWORD INTEGER }*~2%~
-                             but \"not-key\", it is type-of ~S~%  ~
+                             VAR*: \"not-key\" comes, it is type-of ~S.~%  ~
                              in (\"not-key\" 2)"
                              (type-of "not-key")))))
 
@@ -184,8 +187,20 @@
          (& #-clisp ; #1
             (string= (princ-to-string condition)
                      (format nil "VAR := { KEYWORD STRING }*~2%~
-                             Length mismatch. Lack last STRING of (KEYWORD STRING)~%~
+                             VAR*: Length mismatch. Lack last STRING of (KEYWORD STRING)~%~
                              (:PLIST)"))))
+
+#?(let ((var* '(0 1)))
+    (check-bnf ()
+               ((var* keyword string))))
+:invokes-debugger syntax-error
+,:test (lambda (condition)
+         (& #-clisp ; #1
+            (string= (princ-to-string condition)
+                     (format nil "VAR := { KEYWORD STRING }*~2%~
+                             VAR*: 0 comes, it is type-of BIT.~%~
+                             VAR*: 1 comes, it is type-of BIT.~%  ~
+                             in (0 1)"))))
 
 ; e.g. specify for alist.
 #?(let ((var* '((:key "value") (:key2 "value2"))))
@@ -247,7 +262,7 @@
          (& #-clisp ; #1
             (string= (princ-to-string condition)
                      (format nil "VAR := INTEGER+~2%~
-                             Require CONS but NIL"))))
+                             VAR+: Require CONS but NIL"))))
 
 #?(let ((var+ '("not-integer")))
     (check-bnf ()
@@ -257,7 +272,7 @@
          (& #-clisp ; #1
             (string= (princ-to-string condition)
                      (format nil "VAR := INTEGER+~2%~
-                             but \"not-integer\", it is type-of ~S~%  ~
+                             VAR+: \"not-integer\" comes, it is type-of ~S.~%  ~
                              in (\"not-integer\")"
                              (type-of "not-integer")))))
 
@@ -269,7 +284,7 @@
          (& #-clisp ; #1
             (string= (princ-to-string condition)
                      (format nil "VAR := INTEGER+~2%~
-                             Require CONS but :NOT-CONS"))))
+                             VAR+: Require CONS but :NOT-CONS"))))
 
 #+syntax
 (check-bnf (&key ((:whole whole?))) &rest def+) ; => result
@@ -292,7 +307,7 @@
 ,:test (lambda (condition)
          (& #-clisp ; #1
             (equal #.(format nil "A := SYMBOL~2%~
-                             but \"not-symbol\", it is type-of ~s"
+                             A: \"not-symbol\" comes, it is type-of ~S."
                              (type-of "not-symbol"))
                    (princ-to-string condition))))
 
@@ -304,7 +319,7 @@
          (& #-clisp ; #1
             (equal (format nil "Syntax-error in WHOLE~2%  ~
                            A := SYMBOL~2%~
-                           but \"not-symbol\", it is type-of ~s~2%~
+                           A: \"not-symbol\" comes, it is type-of ~S.~2%~
                            in ~s"
                            (type-of "not-symbol")
                            '(whole ("not-symbol")))
@@ -374,7 +389,7 @@
          (& #-clisp ; #1
             (string= (princ-to-string condition)
                      (format nil "OPTION := [ NULL | SYMBOL ]~2%~
-                             but \"not-symbol\", it is type-of ~S"
+                             OPTION: \"not-symbol\" comes, it is type-of ~S."
                              (type-of "not-symbol")))))
 
 #?(let ((function-name "not function-name"))
@@ -389,7 +404,7 @@
                      (format nil "FUNCTION-NAME := [ NAME | SETF-NAME ]~%~
                              NAME          := SYMBOL~%~
                              SETF-NAME     := ((EQL SETF) NAME)~2%~
-                             but \"not function-name\""))))
+                             FUNCTION-NAME: \"not function-name\" comes."))))
 
 ; to check optional value in list, you can write like below.
 #?(let ((args '(option and others)))
@@ -416,7 +431,7 @@
          (& #-clisp ; #1
             (string= (princ-to-string condition)
                      (format nil "OTHER := SYMBOL*~2%~
-                             but \"not option nor other*\", it is type-of ~S~%  ~
+                             OTHER*: \"not option nor other*\" comes, it is type-of ~S.~%  ~
                              in (\"not option nor other*\" AND OTHERS)"
                              (type-of "not option nor other*")))))
 
@@ -466,7 +481,7 @@
                      (format nil "VAR := (A* B*)~%~
                              A   := SYMBOL~%~
                              B   := INTEGER~2%~
-                             but \"string\", it is type-of ~S~%~
+                             B: \"string\" comes, it is type-of ~S.~%~
                              in (\"string\")"
                              (type-of "string")))))
 
@@ -495,7 +510,7 @@
          (& #-clisp ; #1
             (string= (princ-to-string condition)
                      (format nil "DOC := STRING?~2%~
-                             but NOT-STRING, it is type-of SYMBOL"))))
+                             DOC?: NOT-STRING comes, it is type-of SYMBOL."))))
 
 ;;;; exceptional-situations:
 ; every name should not conflicts cl symbol.
@@ -557,7 +572,7 @@
             (string= (princ-to-string condition)
                      (format nil "VAR  := [ STRING | NAME* ]~%~
                              NAME := SYMBOL~2%~
-                             but :NOT-LIST"))))
+                             VAR: :NOT-LIST comes."))))
 
 #?(let ((var '("string" "list")))
     (check-bnf ()
@@ -569,7 +584,7 @@
             (string= (princ-to-string condition)
                      (format nil "VAR  := [ STRING | NAME* ]~%~
                              NAME := SYMBOL~2%~
-                             but (\"string\" \"list\")"))))
+                             VAR: (\"string\" \"list\") comes."))))
 
 ;; right side xxx?
 #?(let ((ll nil))
@@ -605,7 +620,7 @@
             (string= (princ-to-string condition)
                      (format nil "LL  := (VAR?)~%~
                              VAR := SYMBOL~2%~
-                             Require LIST but \"not list\""))))
+                             LL: Require LIST but \"not list\""))))
 
 #?(let ((ll '("not symbol")))
     (check-bnf ()
@@ -616,7 +631,7 @@
          (& #-clisp ; #1
             (string= (princ-to-string condition)
                      (format nil "VAR := SYMBOL~2%~
-                             but \"not symbol\", it is type-of ~S"
+                             VAR: \"not symbol\" comes, it is type-of ~S."
                              (type-of "not symbol")))))
 
 ;;;; Practical case examples.
@@ -652,7 +667,7 @@
                              INIT-FORM     := ([ SYMBOL | EXTERNAL-SPEC ] EXPRESSION SUPPLIEDP?)~%~
                              EXTERNAL-SPEC := (SYMBOL VAR)~%~
                              SUPPLIEDP     := VAR?~2%~
-                             Require LIST but \"not-list\""))))
+                             <LAMBDA-LIST>: Require LIST but \"not-list\""))))
 
 (requirements-about expression :doc-type type)
 ;;;; description:

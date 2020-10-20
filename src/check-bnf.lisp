@@ -366,7 +366,7 @@
   `(,name (,name)
     (if (typep ,name '(and atom (not null)))
         (let ((*default-condition* 'violate-list))
-          (syntax-error ',name "Require LIST but ~S." ,name))
+          (syntax-error ',name "~A: Require LIST but ~S." ',name ,name))
         ,(<*form-body> name spec+))))
 
 (defun resignaler (name actual-args)
@@ -381,7 +381,7 @@
                    :when c
                      :append (bnf-definitions c) :into defs
                    :finally (return (append *bnf* defs)))))
-        (syntax-error name "~{~?~^ ~}~@?"
+        (syntax-error name "~{~?~^ ~:@_~}~@?"
                       (loop :for c :in conditions
                             :when c
                               :collect (simple-condition-format-control c)
@@ -418,7 +418,8 @@
                                  ,args
                                  (let ((*default-condition* 'may-syntax-error))
                                    (syntax-error ',name
-                                                 "Length mismatch. Lack last ~{~S~^ ~} of ~S~:@_~S"
+                                                 "~A: Length mismatch. Lack last ~{~S~^ ~} of ~S~:@_~S"
+                                                 ',name
                                                  (subseq ',spec+
                                                          (mod (length ,args)
                                                               ,length))
@@ -437,7 +438,8 @@
 
 (defun <check-type-form> (name var type-specifier)
   `(unless (typep ,var ',type-specifier)
-     (syntax-error ',name "but ~S, it is type-of ~S" ,var (type-of ,var))))
+     (syntax-error ',name "~A: ~S comes, it is type-of ~S." ',name ,var
+                   (type-of ,var))))
 
 (defun <local-type-check-form> (name var spec)
   (cond ((t-p spec) nil)
@@ -466,7 +468,8 @@
                               (syntax-error ()
                                 ,(if rest
                                      nil
-                                     `(syntax-error ',name "but ~S" ,var)))
+                                     `(syntax-error ',name "~A: ~S comes."
+                                                    ',name ,var)))
                               (:no-error (&rest args)
                                 (declare (ignore args))
                                 (return))))))))
@@ -531,8 +534,8 @@
                   (lambda (s)
                     (and (symbolp s) (find (extended-marker s) "*?")))
                   spec)
-                `(syntax-error ',name "Require LIST but ~S" ,name)
-                `(syntax-error ',name "Require CONS but ~S" ,name))
+                `(syntax-error ',name "~A: Require LIST but ~S" ',name ,name)
+                `(syntax-error ',name "~A: Require CONS but ~S" ',name ,name))
            (check-cons ,var ,(<spec-form> spec name) ',spec))))
 
 (defun <spec-form> (spec name)
@@ -601,14 +604,14 @@
   (let ((*form (<*form-body> name spec+)))
     `(,name (,name)
       (if (atom ,name)
-          (syntax-error ',name "Require CONS but ~S" ,name)
+          (syntax-error ',name "~A: Require CONS but ~S" ',name ,name)
           ,*form))))
 
 (defun *-checker (name cont)
   (lambda (arg)
     (if (typep arg '(and atom (not null)))
         (let ((*default-condition* 'violate-list))
-          (syntax-error name "Require LIST but ~S." arg))
+          (syntax-error name "~A: Require LIST but ~S." name arg))
         (loop :for rest :on arg
               :do (handler-case (funcall cont (car rest))
                     (syntax-error (c)
@@ -623,7 +626,7 @@
 (defun +-checker (name cont)
   (lambda (arg)
     (if (atom arg)
-        (syntax-error name "Require CONS but ~S" arg)
+        (syntax-error name "~A: Require CONS but ~S" name arg)
         (handler-case (mapc cont arg)
           (syntax-error (c)
             (apply #'syntax-error name
