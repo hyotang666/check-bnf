@@ -638,6 +638,22 @@
        (declaration* ((eql declare) t*)))))
 => NIL
 
+;;;; Tests
+#?(let ((ll "not-list"))
+    (check-bnf ()
+      ((ll <lambda-list>))))
+:invokes-debugger syntax-error
+,:test (lambda (condition)
+         (& #-clisp ; #1
+            (string= (princ-to-string condition)
+                     (format nil "<LAMBDA-LIST> := (LAMBDA-ELT*)~%~
+                             LAMBDA-ELT    := [ VAR | INIT-FORM ]~%~
+                             VAR           := (AND SYMBOL (NOT [ BOOLEAN | KEYWORD ]))~%~
+                             INIT-FORM     := ([ SYMBOL | EXTERNAL-SPEC ] EXPRESSION SUPPLIEDP?)~%~
+                             EXTERNAL-SPEC := (SYMBOL VAR)~%~
+                             SUPPLIEDP     := VAR?~2%~
+                             Require LIST but \"not-list\""))))
+
 (requirements-about expression :doc-type type)
 ;;;; description:
 ;;;; compound type specifier kind:

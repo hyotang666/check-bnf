@@ -2,7 +2,7 @@
 (in-package :asdf)
 (defsystem "check-bnf"
   :version
-  "8.0.0"
+  "8.1.0"
   :description "Macro arguments checker."
   :author "SATO Shinichi"
   :license "MIT"
@@ -11,6 +11,7 @@
    "millet" ; Wrapper for implementation dependent tiny utilities.
    "alexandria" ; Public domain utilities.
    "matrix-case" ; Control flow.
+   "closer-mop" ; Wrapper of meta-object-protocols.
    )
   :pathname
   "src/"

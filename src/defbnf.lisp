@@ -1,31 +1,5 @@
 (in-package :check-bnf)
 
-;;;; DSL
-
-(defmacro defbnf (definition)
-  (let ((fun-name (caar definition)) (*bnf* definition))
-    `(defun ,fun-name (,fun-name)
-       ,(if (or (and (cddar definition) (not (every #'t-p (cdar definition))))
-                (find (extended-marker fun-name) "*+")
-                (and (null (cddar definition)) (not (t-p (cadar definition)))))
-            `(let ((*bnf* ',*bnf*))
-               (labels ,(mapcar #'<local-fun> definition)
-                 (,fun-name ,fun-name)))
-            nil))))
-
-;;;; PRETTY-PRINTER
-
-(defun pprint-defbnf (stream exp)
-  (funcall
-    (formatter
-     #.(concatenate 'string "~:<" ; pprint-logobal-block.
-                    "~W ~1I~:_" ; operator.
-                    "~@{~:/pprint-linear/~^ ~_~}" ; form.
-                    "~:>"))
-    stream exp))
-
-(set-pprint-dispatch '(cons (member defbnf)) 'pprint-defbnf)
-
 ;;;; NATIVE SUPPORTS.
 
 (defbnf

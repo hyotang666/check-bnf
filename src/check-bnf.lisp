@@ -73,6 +73,23 @@
          :whole *whole*
          :definitions *bnf*))
 
+;;;; CHECKER
+
+(defclass checker ()
+  ((definitions :initarg :definitions :reader bnf-definitions))
+  (:metaclass c2mop:funcallable-standard-class))
+
+(defmethod initialize-instance :after
+           ((checker checker) &key function &allow-other-keys)
+  (c2mop:set-funcallable-instance-function checker function))
+
+;;; CHECKER UTILITIES.
+
+(defun checker-p (thing) (typep thing 'checker))
+
+(defun cboundp (symbol)
+  (and (symbolp symbol) (fboundp symbol) (checker-p (symbol-function symbol))))
+
 ;;;; UTILITIES
 
 (defun cons-equal (list1 list2) (tree-equal list1 list2 :test (constantly t)))
@@ -130,6 +147,8 @@
                         (if (typep thing '(cons (eql or) *))
                             (some #'rec (cdr thing))
                             (eq t (millet:type-expand thing))))
+                       ((cboundp thing)
+                        (t-p thing (bnf-definitions (symbol-function thing))))
                        ((atom thing)
                         (multiple-value-bind (but mark)
                             (but-extended-marker thing)
@@ -356,7 +375,12 @@
       (let ((*default-condition*
              (if (null (car conditions))
                  'syntax-error
-                 'may-syntax-error)))
+                 'may-syntax-error))
+            (*bnf*
+             (loop :for c :in conditions
+                   :when c
+                     :append (bnf-definitions c) :into defs
+                   :finally (return (append *bnf* defs)))))
         (syntax-error name "~{~?~^ ~}~@?"
                       (loop :for c :in conditions
                             :when c
@@ -637,3 +661,39 @@
     stream exp))
 
 (set-pprint-dispatch '(cons (eql check-bnf)) 'pprint-check-bnf)
+
+;;;; DSL
+
+(defmacro defbnf (definition)
+  (let ((fun-name (caar definition))
+        (*bnf* definition)
+        (function (gensym "FUNCTION")))
+    `(let ((,function
+            (lambda (,fun-name)
+              ,(if (or (and (cddar definition)
+                            (not (every #'t-p (cdar definition))))
+                       (find (extended-marker fun-name) "*+")
+                       (and (null (cddar definition))
+                            (not (t-p (cadar definition)))))
+                   `(let ((*bnf* ',*bnf*))
+                      (labels ,(mapcar #'<local-fun> definition)
+                        (,fun-name ,fun-name)))
+                   nil))))
+       (setf (symbol-function ',fun-name)
+               (make-instance 'checker
+                              :definitions ',definition
+                              :function ,function))
+       ',fun-name)))
+
+;;;; PRETTY-PRINTER
+
+(defun pprint-defbnf (stream exp)
+  (funcall
+    (formatter
+     #.(concatenate 'string "~:<" ; pprint-logobal-block.
+                    "~W ~1I~:_" ; operator.
+                    "~@{~:/pprint-linear/~^ ~_~}" ; form.
+                    "~:>"))
+    stream exp))
+
+(set-pprint-dispatch '(cons (member defbnf)) 'pprint-defbnf)
