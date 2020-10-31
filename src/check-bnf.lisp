@@ -671,22 +671,23 @@
   (let ((fun-name (caar definition))
         (*bnf* definition)
         (function (gensym "FUNCTION")))
-    `(let ((,function
-            (lambda (,fun-name)
-              ,(if (or (and (cddar definition)
-                            (not (every #'t-p (cdar definition))))
-                       (find (extended-marker fun-name) "*+")
-                       (and (null (cddar definition))
-                            (not (t-p (cadar definition)))))
-                   `(let ((*bnf* ',*bnf*))
-                      (labels ,(mapcar #'<local-fun> definition)
-                        (,fun-name ,fun-name)))
-                   nil))))
-       (setf (symbol-function ',fun-name)
-               (make-instance 'checker
-                              :definitions ',definition
-                              :function ,function))
-       ',fun-name)))
+    `(eval-when (:compile-toplevel :load-toplevel :execute)
+       (let ((,function
+              (lambda (,fun-name)
+                ,(if (or (and (cddar definition)
+                              (not (every #'t-p (cdar definition))))
+                         (find (extended-marker fun-name) "*+")
+                         (and (null (cddar definition))
+                              (not (t-p (cadar definition)))))
+                     `(let ((*bnf* ',*bnf*))
+                        (labels ,(mapcar #'<local-fun> definition)
+                          (,fun-name ,fun-name)))
+                     nil))))
+         (setf (symbol-function ',fun-name)
+                 (make-instance 'checker
+                                :definitions ',definition
+                                :function ,function))
+         ',fun-name))))
 
 ;;;; PRETTY-PRINTER
 
