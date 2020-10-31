@@ -198,9 +198,10 @@
          (& #-clisp ; #1
             (string= (princ-to-string condition)
                      (format nil "VAR := { KEYWORD STRING }*~2%~
-                             VAR*: 0 comes, it is type-of BIT.~%~
-                             VAR*: 1 comes, it is type-of BIT.~%  ~
-                             in (0 1)"))))
+                             VAR*: 0 comes, it is type-of ~S.~%~
+                             VAR*: 1 comes, it is type-of ~S.~%  ~
+                             in (0 1)"
+                             (type-of 0) (type-of 1)))))
 
 ; e.g. specify for alist.
 #?(let ((var* '((:key "value") (:key2 "value2"))))
