@@ -750,6 +750,7 @@
    (NAME SYMBOL)
    (SETF-NAME ((EQL SETF) NAME))))"
 
+#-clisp ; #2
 #?(PPRINT-CHECK-BNF NIL
                     '(CHECK-BNF ()
                        (A
