@@ -81,7 +81,7 @@ SBCL
 ### Tested with
 * SBCL/2.0.9
 * CCL/1.12
-* ECL/20.4.24
+* ECL/20.4.24 ; Failed.
 * CLISP/2.49
 
 ### Known issue.
@@ -92,6 +92,9 @@ SBCL
 
 CHECK-BNF works fine but the printed message is a little bit strange in clisp.
 For details [see spec file](spec/check-bnf.lisp).
+
+#### ECL
+Currently CHECK-BNF stop to support ECL due to [ECL specific issue](https://gitlab.com/embeddable-common-lisp/ecl/-/issues/570).
 
 ## Installation
 
