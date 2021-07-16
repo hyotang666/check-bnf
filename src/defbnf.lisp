@@ -1,5 +1,7 @@
 (in-package :check-bnf)
 
+(declaim (optimize speed))
+
 ;;;; NATIVE SUPPORTS.
 
 (defbnf

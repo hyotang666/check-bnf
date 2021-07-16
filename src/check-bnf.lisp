@@ -18,6 +18,8 @@
 
 (in-package :check-bnf)
 
+(declaim (optimize speed))
+
 ;;;; TYPES
 
 (deftype type-specifier () '(or symbol cons))
@@ -126,6 +128,7 @@
        nil)))
 
 (defun at-least-n-cons (n)
+  (declare (type fixnum n))
   (if (zerop n)
       '*
       `(cons * ,(at-least-n-cons (1- n)))))
@@ -137,7 +140,7 @@
     (labels ((rec (thing)
                (let ((spec (assoc thing *bnf*)))
                  (if spec
-                     (if (find (car spec) seen)
+                     (if (find (the symbol (car spec)) seen)
                          nil
                          (progn
                           (push (car spec) seen)
@@ -168,6 +171,8 @@
                                  (t-p spec)))
                           (unless (t-p (car spec))
                             (return nil)))))))))
+      (declare
+        (ftype (function ((or symbol list)) (values boolean &optional)) rec))
       (rec thing))))
 
 ;;;; CONDITION REPORTER.
@@ -237,8 +242,11 @@
                      (typecase thing (cons (body thing))))))
              (body (list)
                (dolist (spec list)
+                 (declare (type (not number) spec))
                  (when (and (not (eq spec thing)) (not (assoc spec acc)))
                    (rec spec)))))
+      (declare
+        (ftype (function ((or symbol list)) (values null &optional)) rec))
       (rec thing))
     (nreverse acc)))
 
@@ -369,6 +377,9 @@
           (syntax-error ',name "~A: Require LIST but ~S." ',name ,name))
         ,(<*form-body> name spec+))))
 
+(declaim
+ (ftype (function (symbol list) (values function &optional)) resignaler))
+
 (defun resignaler (name actual-args)
   (lambda (&rest conditions)
     (when (find-if (lambda (x) (typep x 'syntax-error)) conditions)
@@ -390,7 +401,7 @@
                       "~2I~:@_in ~S~I" actual-args)))))
 
 (defun <*form-body> (name spec+)
-  (let* ((length (length spec+))
+  (let* ((length (list-length spec+))
          (gsyms (alexandria:make-gensym-list length))
          (args (gensym "ARGS"))
          (forms
@@ -584,7 +595,9 @@
   (cond
     ((millet:type-specifier-p spec)
      (unless (eql t (millet:type-expand spec))
-       (unless (typep name spec)
+       (unless (locally
+                (declare (optimize (speed 1))) ; due to spec is dynamic.
+                (typep name spec))
          (syntax-error name "but ~S, it is type-of ~S" name (type-of name)))))
     ((spec-p spec) (funcall (spec-checker spec) name))
     ((typep spec '(cons (eql or) *))
@@ -610,6 +623,7 @@
           ,*form))))
 
 (defun *-checker (name cont)
+  (declare (type function cont))
   (lambda (arg)
     (if (typep arg '(and atom (not null)))
         (let ((*default-condition* 'violate-list))
@@ -626,6 +640,7 @@
                                        (list "~:@_in ~S" rest))))))))))
 
 (defun +-checker (name cont)
+  (declare (type function cont))
   (lambda (arg)
     (if (atom arg)
         (syntax-error name "~A: Require CONS but ~S" name arg)
