@@ -77,9 +77,11 @@
 
 ;;;; CHECKER
 
-(defclass checker ()
-  ((definitions :initarg :definitions :reader bnf-definitions))
-  (:metaclass c2mop:funcallable-standard-class))
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  ;; CHECKER-P below needs this eval-when.
+  (defclass checker ()
+    ((definitions :initarg :definitions :reader bnf-definitions))
+    (:metaclass c2mop:funcallable-standard-class)))
 
 (defmethod initialize-instance :after
            ((checker checker) &key function &allow-other-keys)
