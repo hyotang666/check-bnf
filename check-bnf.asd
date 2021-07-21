@@ -6,6 +6,8 @@
   :description "Macro arguments checker."
   :author "SATO Shinichi"
   :license "MIT"
+  :source-control (:git "git@github.com:hyotang666/check-bnf")
+  :bug-tracker "https://github.com/hyotang666/check-bnf/issues"
   :depends-on
   (
    "millet" ; Wrapper for implementation dependent tiny utilities.
