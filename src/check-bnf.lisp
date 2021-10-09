@@ -308,6 +308,9 @@
      (var-name symbol)
      (spec+ (or type-specifier bnf-name or-form spec+))
      (or-form ((eql or) spec+))))
+  ;; Early return due to millet does not support and/or has issue.
+  #+(not (or sbcl ccl clisp lispworks))
+  (return-from check-bnf nil)
   ;; THIS IS THE WHAT WE WANT TO GENERATE.
   (labels ((def+ (def+)
              (if (null def+)

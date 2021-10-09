@@ -53,4 +53,6 @@
     (load-system system)
     (defmethod perform :after
                ((o load-op) (c (eql (find-system "check-bnf"))))
+      #-(or sbcl ccl clisp lispworks)
+      (warn "CHECK-BNF does not support ~S. (Do nothing.)" (lisp-implementation-type))
       (symbol-call :jingoh.documentizer :import c))))
