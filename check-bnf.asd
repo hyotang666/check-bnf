@@ -10,10 +10,10 @@
   :bug-tracker "https://github.com/hyotang666/check-bnf/issues"
   :depends-on
   (
-   "millet" ; Wrapper for implementation dependent tiny utilities.
-   "alexandria" ; Public domain utilities.
-   "matrix-case" ; Control flow.
-   "closer-mop" ; Wrapper of meta-object-protocols.
+   "alexandria"         ; Utilities.
+   "millet"             ; Wrapper for implementation dependent tiny utilities.
+   "closer-mop"         ; Wrapper for meta-object-protocols.
+   "matrix-case"        ; Macros for control flow.
    )
   :pathname
   "src/"
