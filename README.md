@@ -96,6 +96,23 @@ For details [see spec file](spec/check-bnf.lisp).
 #### ECL
 Currently CHECK-BNF stop to support ECL due to [ECL specific issue](https://gitlab.com/embeddable-common-lisp/ecl/-/issues/570).
 
+#### allegro
+Currently CHECK-BNF stop to support allegro due to allegro specific issue.
+Here are the session.
+
+```lisp
+CL-USER(0): (lambda (x) (typep x '(and atom (not list))))
+#<Interpreted Function (unnamed) @ #x2255447a>
+CHECK-BNF(1): (funcall * nil)
+NIL ; <--- FINE!
+CL-USER(2): (compile nil **)
+#<Function (:ANONYMOUS-LAMBDA 69) @ #x22557032>
+NIL
+NIL
+CL-USER(3): (funcall * nil)
+T ; <--- WTF!?
+```
+
 ## Installation
 
 quicklisp supported.
