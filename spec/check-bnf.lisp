@@ -217,8 +217,8 @@
          (& #-clisp ; #1
             (string= (princ-to-string condition)
                      (format nil "VAR := (KEYWORD STRING)*~2%~
-                             but :NOT-STRING, it is type-of KEYWORD~%  ~
-                             in ((:KEY2 :NOT-STRING))"))))
+                             but :NOT-STRING, it is type-of ~S~%  ~
+                             in ((:KEY2 :NOT-STRING))" (type-of :dummy)))))
 
 #?(let ((var* '((:key "value") (:not "ballanced" clause))))
     (check-bnf ()
