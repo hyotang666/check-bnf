@@ -20,6 +20,13 @@
 
 (declaim (optimize speed))
 
+(eval-when (:compile-toplevel :load-toplevel)
+  ;; CHECK-BNF depends on the system "millet" the wrapper of implementation dependent utilities.
+  ;; Impls bellow are supported by millet.
+  ;; Comment outed impls are not supported due to it has its own issues.
+  #+(or sbcl ccl #|ecl|# clisp lispworks #|allegro|#)
+  (pushnew :check-bnf *features*))
+
 ;;;; TYPES
 
 (deftype type-specifier () '(or symbol cons))
@@ -308,9 +315,7 @@
      (var-name symbol)
      (spec+ (or type-specifier bnf-name or-form spec+))
      (or-form ((eql or) spec+))))
-  ;; Early return due to millet does not support.
-  ;; Comment outed impls are not supported due to it has its own issues.
-  #+(not (or sbcl ccl #|ecl|# clisp lispworks #|allegro|#))
+  #+(not :check-bnf)
   (return-from check-bnf nil)
   ;; THIS IS THE WHAT WE WANT TO GENERATE.
   (labels ((def+ (def+)
