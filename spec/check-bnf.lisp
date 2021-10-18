@@ -759,6 +759,18 @@
   (A
    B))"
 
+(requirements-about millet)
+
+;; Some implementations could not retrieve lambda-list from c2mop:funcallable-object.
+#-ccl
+#?(millet:lambda-list #'<lambda-list>)
+:satisfies (lambda (lambda-list)
+	     (& (typep lambda-list '(cons symbol null))))
+
+; When this guard failed, we may cleanup :ignore-signals bellow.
+#+ccl
+#?(millet:lambda-list #'<lambda-list>) => ()
+
 (requirements-about <LAMBDA-LIST> :doc-type function)
 
 ;;;; Description:
@@ -788,10 +800,15 @@
 
 ;;;; TESTS.
 #?(<LAMBDA-LIST> :NOT-LIST) :signals SYNTAX-ERROR
+,:ignore-signals warning
 #?(<LAMBDA-LIST> '(:NOT-VAR)) :signals SYNTAX-ERROR
+,:ignore-signals warning
 #?(<LAMBDA-LIST> '(("not init-form var" :DUMMY))) :signals SYNTAX-ERROR
+,:ignore-signals warning
 #?(<LAMBDA-LIST> '((LESS-ELT-FOR-INIT-FORM))) :signals SYNTAX-ERROR
+,:ignore-signals warning
 #?(<LAMBDA-LIST> '((VAR T "not supplied var"))) :signals SYNTAX-ERROR
+,:ignore-signals warning
 
 (requirements-about <FUNCTION-TYPE> :doc-type function)
 
@@ -820,9 +837,12 @@
 ;;;; Tests.
 #?(<FUNCTION-TYPE> 'FUNCTION) => NIL
 #?(<FUNCTION-TYPE> :INVALID) :signals SYNTAX-ERROR
+,:ignore-signals warning
 #?(<FUNCTION-TYPE> '(FUNCTION * *)) => NIL
 #?(<FUNCTION-TYPE> '(FUNCTION :INVALID-AS-LAMBDA-LIST)) :signals SYNTAX-ERROR
+,:ignore-signals warning
 #?(<FUNCTION-TYPE> '(FUNCTION ("not lambda elt") *)) :signals SYNTAX-ERROR
+,:ignore-signals warning
 #?(<FUNCTION-TYPE> '(FUNCTION NIL INTEGER)) => NIL
 #?(<FUNCTION-TYPE> '(FUNCTION NIL (VALUES INTEGER))) => NIL
 #?(<FUNCTION-TYPE> '(FUNCTION NIL (VALUES INTEGER &OPTIONAL))) => NIL
@@ -859,3 +879,4 @@
    '(DECLARE (IGNORE VAR)
              (:TYPE FIXNUM A)))
 :signals SYNTAX-ERROR
+,:ignore-signals warning

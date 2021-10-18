@@ -24,8 +24,12 @@
   ;; CHECK-BNF depends on the system "millet" the wrapper of implementation dependent utilities.
   ;; Impls bellow are supported by millet.
   ;; Comment outed impls are not supported due to it has its own issues.
-  #+(or sbcl ccl #|ecl|# clisp lispworks #|allegro|#)
+  #+(or sbcl ccl #|ecl|# clisp lispworks #|allegro|# #|clasp|# cmu #|abcl|#)
   (pushnew :check-bnf *features*))
+
+(eval-when (:load-toplevel)
+  #-check-bnf
+  (warn "CHECK-BNF does not support ~S. (Do nothing.)" (lisp-implementation-type)))
 
 ;;;; TYPES
 
@@ -699,6 +703,9 @@
   (let ((fun-name (caar definition))
         (*bnf* definition)
         (function (gensym "FUNCTION")))
+    #+(not :check-bnf)
+    (return-from defbnf
+      `(defun ,fun-name (,fun-name) (declare (ignore ,fun-name)) nil))
     `(eval-when (:compile-toplevel :load-toplevel :execute)
        (let ((,function
               (lambda (,fun-name)

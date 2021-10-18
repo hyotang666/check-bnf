@@ -79,12 +79,20 @@ MIT
 SBCL
 
 ### Tested with
-* SBCL/2.0.9
+* SBCL/2.1.7
 * CCL/1.12
-* ECL/20.4.24 ; Failed.
 * CLISP/2.49
+* CMUCL/21D
+* ECL/20.4.24 ; Failed.
+* Allegro/10.1 ; Failed.
+* ABCL/1.8.0 ; Failed.
 
 ### Known issue.
+#### CCL
+Due to its own [issue](https://github.com/Clozure/ccl/issues/350), ccl signals warnings.
+But the check-bnf features are works fine.
+In the test, we just muffled it.
+
 #### CLISP
 [CLISP say](https://clisp.sourceforge.io/impnotes.html#clpp)
 
@@ -112,6 +120,8 @@ NIL
 CL-USER(3): (funcall * nil)
 T ; <--- WTF!?
 ```
+#### ABCL
+Check-bnf depends on `millet:type-specifier-p` and it is not completely implemented for abcl.
 
 ## Installation
 

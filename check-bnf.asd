@@ -2,7 +2,7 @@
 (in-package :asdf)
 (defsystem "check-bnf"
   :version
-  "8.1.7"
+  "8.1.8"
   :description "Macro arguments checker."
   :author "SATO Shinichi"
   :license "MIT"
@@ -53,6 +53,4 @@
     (load-system system)
     (defmethod perform :after
                ((o load-op) (c (eql (find-system "check-bnf"))))
-      #-(or sbcl ccl clisp lispworks)
-      (warn "CHECK-BNF does not support ~S. (Do nothing.)" (lisp-implementation-type))
       (symbol-call :jingoh.documentizer :import c))))
