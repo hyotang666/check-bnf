@@ -79,11 +79,11 @@ MIT
 SBCL
 
 ### Tested with
-* SBCL/2.1.7
-* CCL/1.12
+* SBCL/2.1.10
+* CCL/1.12.1
 * CLISP/2.49
 * CMUCL/21D
-* ECL/20.4.24 ; Failed.
+* ECL/21.2.1 ; Failed.
 * Allegro/10.1 ; Failed.
 * ABCL/1.8.0 ; Failed.
 
