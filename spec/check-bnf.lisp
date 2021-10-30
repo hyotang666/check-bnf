@@ -759,7 +759,7 @@
   (A
    B))"
 
-(requirements-about millet)
+(requirements-about millet :doc-type nil)
 
 ;; Some implementations could not retrieve lambda-list from c2mop:funcallable-object.
 #-ccl
