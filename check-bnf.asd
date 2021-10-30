@@ -2,7 +2,7 @@
 (in-package :asdf)
 (defsystem "check-bnf"
   :version
-  "8.1.8"
+  "8.1.9"
   :description "Macro arguments checker."
   :author "SATO Shinichi"
   :license "MIT"

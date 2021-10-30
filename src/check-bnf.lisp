@@ -29,7 +29,8 @@
 
 (eval-when (:load-toplevel)
   #-check-bnf
-  (warn "CHECK-BNF does not support ~S. (Do nothing.)" (lisp-implementation-type)))
+  (warn "CHECK-BNF does not support ~S. (Do nothing.)"
+        (lisp-implementation-type)))
 
 ;;;; TYPES
 
@@ -79,12 +80,13 @@
 (defvar *default-condition* 'syntax-error)
 
 (defun syntax-error (name format-control &rest format-arguments)
-  (error *default-condition*
-         :name name
-         :format-control format-control
-         :format-arguments format-arguments
-         :whole *whole*
-         :definitions *bnf*))
+  (error
+    (make-condition *default-condition*
+                    :name name
+                    :format-control format-control
+                    :format-arguments format-arguments
+                    :whole *whole*
+                    :definitions *bnf*)))
 
 ;;;; CHECKER
 
@@ -430,7 +432,7 @@
     (if (null (remove 'ignored forms :key #'car))
         nil
         `(loop :for ,args :on ,name
-                    :by ,(let ((length (length spec+)))
+                    :by ,(let ((length (list-length spec+)))
                            (case length
                              (1 '#'cdr)
                              (2 '#'cddr)
@@ -531,7 +533,7 @@
                  (syntax-error (c)
                    (if (cdr specs)
                        (push "dummy" actual)
-                       (error c)))))
+                       (error (the condition c))))))
               ((#\*)
                (handler-case (local-check actual elt)
                  (may-syntax-error (condition)
@@ -542,7 +544,7 @@
                                        (last
                                          (simple-condition-format-arguments
                                            condition)))))
-                       (error condition)))
+                       (error (the condition condition))))
                  (:no-error (&rest _)
                    (declare (ignore _))
                    (setf actual nil))))
