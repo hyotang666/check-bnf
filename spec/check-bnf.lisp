@@ -4,6 +4,21 @@
 (in-package :check-bnf.spec)
 (setup :check-bnf)
 
+(requirements-about pretty-printer :doc-type nil)
+
+; CLISP specific guard [1]
+#+clisp
+#?(pprint-logical-block (*standard-output* nil)
+    (check-bnf::pprint-definitions nil '((var symbol))))
+:outputs " VAR := SYMBOL
+ "
+
+; ABCL has issue about mandatory newline. [2]
+#+abcl
+#?(format nil "~<~:@_~:>" nil) => ""
+,:test equal
+,:comment "When this guard failed, spec annotated [2] should be fixed."
+
 (requirements-about CHECK-BNF :doc-type function)
 
 ;;;; Description:
@@ -24,13 +39,6 @@
                      (format nil "VAR := SYMBOL~2%~
                              VAR: \"string\" comes, it is type-of ~S."
                              (type-of "string")))))
-
-; CLISP specific guard #1.
-#+clisp
-#?(pprint-logical-block (*standard-output* nil)
-    (check-bnf::pprint-definitions nil '((var symbol))))
-:outputs " VAR := SYMBOL
- "
 
 ; You can check some place at once.
 #?(let ((a 'symbol)
@@ -91,7 +99,7 @@
       ((var* symbol))))
 :invokes-debugger syntax-error
 ,:test (lambda (condition)
-         (& #-clisp ; #1
+         (& #-clisp ; [1]
             (string= (princ-to-string condition)
                      (format nil "VAR := SYMBOL*~2%~
                              VAR*: \"string\" comes, it is type-of ~S.~%  in (\"string\")"
@@ -102,7 +110,7 @@
       ((var* symbol))))
 :invokes-debugger syntax-error
 ,:test (lambda (condition)
-         (& #-clisp ; #1
+         (& #-clisp ; [1]
             (string= (princ-to-string condition)
                      (format nil "VAR := SYMBOL*~2%~
                              VAR*: Require LIST but :NOT-LIST."))))
@@ -160,7 +168,7 @@
       ((var* keyword integer))))
 :invokes-debugger syntax-error
 ,:test (lambda (condition)
-         (& #-clisp ; #1
+         (& #-clisp ; [1]
             (string= (princ-to-string condition)
                      (format nil "VAR := { KEYWORD INTEGER }*~2%~
                              VAR*: \"not integer\" comes, it is type-of ~S.~%  ~
@@ -172,7 +180,7 @@
       ((var* keyword integer))))
 :invokes-debugger syntax-error
 ,:test (lambda (condition)
-         (& #-clisp ; #1
+         (& #-clisp ; [1]
             (string= (princ-to-string condition)
                      (format nil "VAR := { KEYWORD INTEGER }*~2%~
                              VAR*: \"not-key\" comes, it is type-of ~S.~%  ~
@@ -184,7 +192,7 @@
       ((var* keyword string))))
 :invokes-debugger syntax-error
 ,:test (lambda (condition)
-         (& #-clisp ; #1
+         (& #-clisp ; [1]
             (string= (princ-to-string condition)
                      (format nil "VAR := { KEYWORD STRING }*~2%~
                              VAR*: Length mismatch. Lack last STRING of (KEYWORD STRING)~%~
@@ -195,7 +203,7 @@
                ((var* keyword string))))
 :invokes-debugger syntax-error
 ,:test (lambda (condition)
-         (& #-clisp ; #1
+         (& #-clisp ; [1]
             (string= (princ-to-string condition)
                      (format nil "VAR := { KEYWORD STRING }*~2%~
                              VAR*: 0 comes, it is type-of ~S.~%~
@@ -214,7 +222,7 @@
       ((var* (keyword string)))))
 :invokes-debugger syntax-error
 ,:test (lambda (condition)
-         (& #-clisp ; #1
+         (& #-clisp ; [1]
             (string= (princ-to-string condition)
                      (format nil "VAR := (KEYWORD STRING)*~2%~
                              but :NOT-STRING, it is type-of ~S~%  ~
@@ -225,7 +233,7 @@
       ((var* (keyword string)))))
 :invokes-debugger syntax-error
 ,:test (lambda (condition)
-         (& #-clisp ; #1
+         (& #-clisp ; [1]
             (string= (princ-to-string condition)
                      (format nil "VAR := (KEYWORD STRING)*~2%~
                              Length mismatch. (KEYWORD STRING) but (:NOT \"ballanced\" CLAUSE)~%  ~
@@ -236,7 +244,7 @@
       ((var* (keyword string)))))
 :invokes-debugger syntax-error
 ,:test (lambda (condition)
-         (& #-clisp ; #1
+         (& #-clisp ; [1]
             (string= (princ-to-string condition)
                      (format nil "VAR := (KEYWORD STRING)*~2%~
                              Length mismatch. (KEYWORD STRING) but (:NOT-BALLANCED)~%  ~
@@ -260,7 +268,7 @@
       ((var+ integer))))
 :invokes-debugger syntax-error
 ,:test (lambda (condition)
-         (& #-clisp ; #1
+         (& #-clisp ; [1]
             (string= (princ-to-string condition)
                      (format nil "VAR := INTEGER+~2%~
                              VAR+: Require CONS but NIL"))))
@@ -270,7 +278,7 @@
       ((var+ integer))))
 :invokes-debugger syntax-error
 ,:test (lambda (condition)
-         (& #-clisp ; #1
+         (& #-clisp ; [1]
             (string= (princ-to-string condition)
                      (format nil "VAR := INTEGER+~2%~
                              VAR+: \"not-integer\" comes, it is type-of ~S.~%  ~
@@ -282,7 +290,7 @@
       ((var+ integer))))
 :invokes-debugger syntax-error
 ,:test (lambda (condition)
-         (& #-clisp ; #1
+         (& #-clisp ; [1]
             (string= (princ-to-string condition)
                      (format nil "VAR := INTEGER+~2%~
                              VAR+: Require CONS but :NOT-CONS"))))
@@ -306,7 +314,7 @@
       ((a symbol))))
 :invokes-debugger syntax-error
 ,:test (lambda (condition)
-         (& #-clisp ; #1
+         (& #-clisp ; [1]
             (equal #.(format nil "A := SYMBOL~2%~
                              A: \"not-symbol\" comes, it is type-of ~S."
                              (type-of "not-symbol"))
@@ -317,7 +325,7 @@
       ((a symbol))))
 :invokes-debugger syntax-error
 ,:test (lambda (condition)
-         (& #-clisp ; #1
+         (& #-clisp ; [1]
             (equal (format nil "Syntax-error in WHOLE~2%  ~
                            A := SYMBOL~2%~
                            A: \"not-symbol\" comes, it is type-of ~S.~2%~
@@ -387,7 +395,7 @@
       ((option (or null symbol)))))
 :invokes-debugger syntax-error
 ,:test (lambda (condition)
-         (& #-clisp ; #1
+         (& #-clisp ; [1]
             (string= (princ-to-string condition)
                      (format nil "OPTION := [ NULL | SYMBOL ]~2%~
                              OPTION: \"not-symbol\" comes, it is type-of ~S."
@@ -400,7 +408,7 @@
        (setf-name ((eql setf) name)))))
 :invokes-debugger syntax-error
 ,:test (lambda (condition)
-         (& #-clisp ; #1
+         (& #-clisp ; [1]
             (string= (princ-to-string condition)
                      (format nil "FUNCTION-NAME := [ NAME | SETF-NAME ]~%~
                              NAME          := SYMBOL~%~
@@ -429,7 +437,8 @@
        (other* symbol))))
 :invokes-debugger syntax-error
 ,:test (lambda (condition)
-         (& #-clisp ; #1
+         (& #-(or clisp ; [1]
+		  abcl) ; [2]
             (string= (princ-to-string condition)
                      (format nil "OTHER := SYMBOL*~2%~
                              OTHER*: \"not option nor other*\" comes, it is type-of ~S.~%  ~
@@ -477,7 +486,7 @@
        (B INTEGER))))
 :invokes-debugger SYNTAX-ERROR
 ,:test (lambda (condition)
-         (& #-clisp ; #1
+         (& #-clisp ; [1]
             (string= (princ-to-string condition)
                      (format nil "VAR := (A* B*)~%~
                              A   := SYMBOL~%~
@@ -508,7 +517,7 @@
        (DOC? STRING))))
 :invokes-debugger syntax-error
 ,:test (lambda (condition)
-         (& #-clisp ; #1
+         (& #-clisp ; [1]
             (string= (princ-to-string condition)
                      (format nil "DOC := STRING?~2%~
                              DOC?: NOT-STRING comes, it is type-of SYMBOL."))))
@@ -539,7 +548,7 @@
        (required keyword))))
 :invokes-debugger syntax-error
 ,:test (lambda (condition)
-         (& #-clisp ; #1
+         (& #-clisp ; [1]
             (string= (princ-to-string condition)
                      (format nil "REQUIRED := KEYWORD~2%~
                              Length mismatch. (SYMBOL SYMBOL REQUIRED) but (SYMBOL SYMBOL)"))))
@@ -569,7 +578,7 @@
        (name symbol))))
 :invokes-debugger syntax-error
 ,:test (lambda (condition)
-         (& #-clisp ; #1
+         (& #-clisp ; [1]
             (string= (princ-to-string condition)
                      (format nil "VAR  := [ STRING | NAME* ]~%~
                              NAME := SYMBOL~2%~
@@ -581,7 +590,7 @@
        (name symbol))))
 :invokes-debugger syntax-error
 ,:test (lambda (condition)
-         (& #-clisp ; #1
+         (& #-clisp ; [1]
             (string= (princ-to-string condition)
                      (format nil "VAR  := [ STRING | NAME* ]~%~
                              NAME := SYMBOL~2%~
@@ -606,7 +615,7 @@
        (var symbol))))
 :invokes-debugger syntax-error
 ,:test (lambda (condition)
-         (& #-clisp ; #1
+         (& #-clisp ; [1]
             (string= (princ-to-string condition)
                      (format nil "VAR := SYMBOL~2%~
                              Length mismatch. (VAR?) but (VAR TOO MUCH)"))))
@@ -617,7 +626,7 @@
        (var symbol))))
 :invokes-debugger syntax-error
 ,:test (lambda (condition)
-         (& #-clisp ; #1
+         (& #-clisp ; [1]
             (string= (princ-to-string condition)
                      (format nil "LL  := (VAR?)~%~
                              VAR := SYMBOL~2%~
@@ -629,7 +638,7 @@
        (var symbol))))
 :invokes-debugger syntax-error
 ,:test (lambda (condition)
-         (& #-clisp ; #1
+         (& #-clisp ; [1]
             (string= (princ-to-string condition)
                      (format nil "VAR := SYMBOL~2%~
                              VAR: \"not symbol\" comes, it is type-of ~S."
@@ -660,7 +669,7 @@
       ((ll <lambda-list>))))
 :invokes-debugger syntax-error
 ,:test (lambda (condition)
-         (& #-clisp ; #1
+         (& #-clisp ; [1]
             (string= (princ-to-string condition)
                      (format nil "<LAMBDA-LIST> := (LAMBDA-ELT*)~%~
                              LAMBDA-ELT    := [ VAR | INIT-FORM ]~%~
@@ -761,15 +770,23 @@
 
 (requirements-about millet :doc-type nil)
 
-;; Some implementations could not retrieve lambda-list from c2mop:funcallable-object.
-#-ccl
+;; millet:type-specifier-p must satisfies the test bellow.
+#?(millet:type-specifier-p '(expression t)) => NIL
+
+;; Millet does not support retrive lambda-list from c2mop:funcallable-object.
+;; Some implementations can retrieve.
+#-(or ccl ecl abcl)
 #?(millet:lambda-list #'<lambda-list>)
 :satisfies (lambda (lambda-list)
 	     (& (typep lambda-list '(cons symbol null))))
 
 ; When this guard failed, we may cleanup :ignore-signals bellow.
-#+ccl
+#+(or abcl ccl)
 #?(millet:lambda-list #'<lambda-list>) => ()
+
+#+ecl
+#?(millet:lambda-list #'<lambda-list>) :signals error
+,:comment "When this guard is failed, we should cleanup test below."
 
 (requirements-about <LAMBDA-LIST> :doc-type function)
 
