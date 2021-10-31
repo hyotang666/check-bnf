@@ -24,7 +24,7 @@
   ;; CHECK-BNF depends on the system "millet" the wrapper of implementation dependent utilities.
   ;; Impls bellow are supported by millet.
   ;; Comment outed impls are not supported due to it has its own issues.
-  #+(or sbcl ccl #|ecl|# clisp lispworks #|allegro|# #|clasp|# cmu #|abcl|#)
+  #+(or sbcl ccl cmucl clisp abcl #|ecl|# #|lispworks|# #|allegro|# #|clasp|#)
   (pushnew :check-bnf *features*))
 
 (eval-when (:load-toplevel)

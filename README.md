@@ -85,7 +85,7 @@ SBCL
 * CMUCL/21D
 * ECL/21.2.1 ; Failed.
 * Allegro/10.1 ; Failed.
-* ABCL/1.8.0 ; Failed.
+* ABCL/1.8.0
 
 ### Known issue.
 #### CCL
@@ -100,6 +100,12 @@ In the test, we just muffled it.
 
 CHECK-BNF works fine but the printed message is a little bit strange in clisp.
 For details [see spec file](spec/check-bnf.lisp).
+
+#### ABCL
+CHECK-BNF works fine but the printed message is a little bit strange in abcl
+due to [the abcl pretty printing issue](https://github.com/armedbear/abcl/issues/406).
+
+Currently tests about pretty printings are ignored.
 
 #### ECL
 Currently CHECK-BNF stop to support ECL due to [ECL specific issue](https://gitlab.com/embeddable-common-lisp/ecl/-/issues/570).
@@ -120,9 +126,6 @@ NIL
 CL-USER(3): (funcall * nil)
 T ; <--- WTF!?
 ```
-#### ABCL
-Check-bnf depends on `millet:type-specifier-p` and it is not completely implemented for abcl.
-
 ## Installation
 
 quicklisp supported.
