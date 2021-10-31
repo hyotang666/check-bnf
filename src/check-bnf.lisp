@@ -46,6 +46,27 @@
 
 ;;;; CONDITION
 
+(defun definitions (thing bnf)
+  (let ((acc))
+    (labels ((rec (thing)
+               (let ((definition
+                      (or (assoc thing bnf)
+                          (assoc (but-extended-marker thing) bnf))))
+                 (if definition
+                     (progn
+                      (pushnew definition acc :key #'car)
+                      (body (cdr definition)))
+                     (typecase thing (cons (body thing))))))
+             (body (list)
+               (dolist (spec list)
+                 (declare (type (not number) spec))
+                 (when (and (not (eq spec thing)) (not (assoc spec acc)))
+                   (rec spec)))))
+      (declare
+        (ftype (function ((or symbol list)) (values null &optional)) rec))
+      (rec thing))
+    (nreverse acc)))
+
 (define-condition syntax-error (program-error simple-error cell-error)
   ((whole :initform nil :initarg :whole :reader whole-form<=syntax-error)
    (definitions :initform nil :initarg :definitions :reader bnf-definitions))
@@ -244,27 +265,6 @@
                           "~]"))))
         stream (cdr exp) exp)))
 
-(defun definitions (thing bnf)
-  (let ((acc))
-    (labels ((rec (thing)
-               (let ((definition
-                      (or (assoc thing bnf)
-                          (assoc (but-extended-marker thing) bnf))))
-                 (if definition
-                     (progn
-                      (pushnew definition acc :key #'car)
-                      (body (cdr definition)))
-                     (typecase thing (cons (body thing))))))
-             (body (list)
-               (dolist (spec list)
-                 (declare (type (not number) spec))
-                 (when (and (not (eq spec thing)) (not (assoc spec acc)))
-                   (rec spec)))))
-      (declare
-        (ftype (function ((or symbol list)) (values null &optional)) rec))
-      (rec thing))
-    (nreverse acc)))
-
 (defun pprint-bnf (stream exp &rest noise)
   (declare (ignore noise))
   (setf stream (or stream *standard-output*))
@@ -306,72 +306,182 @@
               (list num name (cdr definition) mark)))
           definitions)))))
 
-;;;; CHECK-BNF
+;;;; SPEC the intermediate object.
 
-(defmacro check-bnf (&whole whole (&key ((:whole whole?))) &body def+)
-  ;; THIS IS THE WHAT WE WANT TO WRITE.
-  #++
-  (check-bnf (:whole whole :name 'check-bnf)
-    ((whole (or null expression)))
-    ((def+ (clause+))
-     (clause (var-spec spec+))
-     (var-spec (or bnf-name alias))
-     (bnf-name symbol)
-     (alias (bnf-name var-name))
-     (var-name symbol)
-     (spec+ (or type-specifier bnf-name or-form spec+))
-     (or-form ((eql or) spec+))))
-  #+(not :check-bnf)
-  (return-from check-bnf nil)
-  ;; THIS IS THE WHAT WE WANT TO GENERATE.
-  (labels ((def+ (def+)
-             (if (null def+)
-                 (syntax-error 'def+ "Require at least one, but null")
-                 (loop :for (var-spec . spec+) :in (apply #'append def+)
-                       :do (var-spec var-spec)
-                           (spec+ spec+))))
-           (var-spec (var-spec)
-             (unless (typep var-spec
-                            '(or symbol (cons symbol (cons symbol null))))
-               (syntax-error 'var-spec "but ~S" var-spec)))
-           (spec+ (spec+)
-             (if (null spec+)
-                 (syntax-error 'spec+ "Require at least one, but null"))))
-    (let ((*whole* whole))
-      (def+ def+)))
-  ;; Body of CHECK-BNF.
-  (let ((forms
-         (loop :for def :in def+
-               :for *bnf*
-                    = (mapcar
-                        (lambda (clause)
-                          (cons (alexandria:ensure-car (car clause))
-                                (cdr clause)))
-                        def)
-               :for (fun-name var-name) = (alexandria:ensure-list (caar def))
-               :if (or (and (cddar def) (not (every #'t-p (cdar def))))
-                       (find (extended-marker fun-name) "*+")
-                       (and (null (cddar def)) (not (t-p (cadar def)))))
-                 :collect `(let ((*whole* ,whole?) (*bnf* ',*bnf*))
-                             (labels ,(loop :for clause :in def
-                                            :collect (<local-fun> clause))
-                               (,fun-name ,(or var-name fun-name)))))))
-    (typecase forms
-      (null forms)
-      ((cons * null) (car forms))
-      (otherwise `(progn ,@forms)))))
+(defstruct (spec (:constructor spec (name checker)))
+  (name (error "Name is Required for spec.") :type symbol :read-only t)
+  (checker (error "Checker is Required for spec.") :type function :read-only t))
 
-;;; <LOCAL-FUN>
+(defun check-cons (actual-args specs name)
+  (flet ((check (actual null-thunk spec)
+           (typecase actual
+             (null (funcall null-thunk))
+             (atom (local-check actual spec))
+             (otherwise (local-check (car actual) spec))))
+         (length-mismatch ()
+           (let ((*default-condition* 'length-mismatch))
+             (syntax-error name "Length mismatch. ~S but ~S" name
+                           actual-args))))
+    (do ((actual actual-args (cdr actual))
+         (specs specs (cdr specs)))
+        ((atom specs)
+         (matrix-case:matrix-typecase (actual specs)
+           ((null null))
+           ((atom t) (local-check actual specs))
+           (otherwise (length-mismatch))))
+      (let ((elt (car specs)))
+        (if (spec-p elt)
+            (case (extended-marker (spec-name elt))
+              (#\?
+               (handler-case (check actual (lambda ()) elt)
+                 (syntax-error (c)
+                   (if (cdr specs)
+                       (push "dummy" actual)
+                       (error (the condition c))))))
+              ((#\*)
+               (handler-case (local-check actual elt)
+                 (may-syntax-error (condition)
+                   (if (cdr specs)
+                       (setf actual
+                               (cons "dummy"
+                                     (car
+                                       (last
+                                         (simple-condition-format-arguments
+                                           condition)))))
+                       (error (the condition condition))))
+                 (:no-error (&rest _)
+                   (declare (ignore _))
+                   (setf actual nil))))
+              ((#\+) (local-check actual elt) (setf actual nil))
+              (otherwise (check actual #'length-mismatch elt)))
+            (check actual #'length-mismatch elt))))))
 
-(defun <local-fun> (clause)
-  (destructuring-bind
-      (var-spec . spec+)
-      clause
-    (let ((name (alexandria:ensure-car var-spec)))
-      (case (extended-marker name)
-        (#\+ (<+form> name spec+))
-        (#\* (<*form> name spec+))
-        (otherwise (<require-form> name spec+))))))
+(declaim
+ (ftype (function (t t)
+         (values null ; or signals an error.
+                 &optional))
+        local-check))
+
+(defun local-check (name spec)
+  (cond
+    ((millet:type-specifier-p spec)
+     (unless (eql t (millet:type-expand spec))
+       (unless (locally
+                (declare (optimize (speed 1))) ; due to spec is dynamic.
+                (typep name spec))
+         (syntax-error name "but ~S, it is type-of ~S" name (type-of name)))))
+    ((spec-p spec) (funcall (spec-checker spec) name))
+    ((typep spec '(cons (eql or) *))
+     (loop :for (spec+ . rest) :on (cdr spec)
+           :if (null rest)
+             :do (handler-case (local-check name spec+)
+                   (syntax-error ()
+                     (syntax-error name "~S := ~S but not exhausted. ~S" name
+                                   spec spec+)))
+           :else
+             :do (ignore-errors (local-check name spec+))))
+    ((consp spec) (check-cons name spec spec))
+    ((functionp spec) (funcall spec name))
+    (t (error "NIY: Name: ~S, Spec ~S" name spec))))
+
+;;;; FORMS
+
+(defun <check-type-form> (name var type-specifier)
+  `(unless (typep ,var ',type-specifier)
+     (syntax-error ',name "~A: ~S comes, it is type-of ~S." ',name ,var
+                   (type-of ,var))))
+
+(defun <local-type-check-form> (name var spec)
+  (cond ((t-p spec) nil)
+        ((eql nil (millet:type-expand spec))
+         (syntax-error 'check-bnf "NIL is invalid.~%HINT: NULL?"))
+        (t (<check-type-form> name var spec))))
+
+(defun <local-atom-check-form> (name var spec)
+  (multiple-value-bind (but mark)
+      (but-extended-marker spec)
+    (case mark
+      ((#\+ #\*)
+       `(funcall
+          (,(find-symbol (format nil "~C-CHECKER" mark) :check-bnf) ',name
+           #',but)
+          ,var))
+      (otherwise `(,spec ,var)))))
+
+;; <LOCAL-CHECK-FORM>
+
+(defun <local-check-form> (name var spec)
+  (cond
+    ((millet:type-specifier-p spec) (<local-type-check-form> name var spec))
+    ((atom spec) (<local-atom-check-form> name var spec))
+    ((typep spec '(cons (eql or) *)) (<local-or-check-form> name var spec))
+    ((consp spec) (<local-cons-check-form> name var spec))))
+
+(defun <local-or-check-form> (name var spec)
+  (if (t-p spec)
+      nil
+      `(block nil
+         (tagbody
+          ,@(loop :for (spec . rest) :on (cdr spec)
+                  :collect `(handler-case ,(<local-check-form> name var spec)
+                              (syntax-error ()
+                                ,(if rest
+                                     nil
+                                     `(syntax-error ',name "~A: ~S comes."
+                                                    ',name ,var)))
+                              (:no-error (&rest args)
+                                (declare (ignore args))
+                                (return))))))))
+
+(defun <spec-form> (spec name)
+  (flet ((may-checker-form (thing)
+           (if (t-p thing)
+               `(constantly nil)
+               `(lambda (x) ,(<check-type-form> spec 'x thing)))))
+    (cond ((null spec) nil)
+          ((millet:type-specifier-p spec) `',spec)
+          ((atom spec)
+           (multiple-value-bind (but mark)
+               (but-extended-marker spec)
+             `(spec ',spec
+                    ,(if (find mark "+*?")
+                         (if (assoc but *bnf*)
+                             (ecase mark
+                               (#\+ `(+-checker ',name #',but))
+                               (#\* `(*-checker ',name #',but))
+                               (#\? `#',but))
+                             (if (millet:type-specifier-p but)
+                                 (ecase mark
+                                   (#\+
+                                    `(+-checker ',name
+                                                ,(may-checker-form but)))
+                                   (#\*
+                                    `(*-checker ',name
+                                                ,(may-checker-form but)))
+                                   (#\? (may-checker-form but)))
+                                 `#',spec))
+                         `#',spec))))
+          ((typep spec '(cons (eql or) *))
+           `(lambda (x) ,(<local-or-check-form> name 'x spec)))
+          ((consp spec)
+           `(cons ,(<spec-form> (car spec) name)
+                  ,(<spec-form> (cdr spec) name))))))
+
+(defun <local-cons-check-form> (name var spec)
+  (if (t-p spec)
+      `(unless (cons-equal ,var ',spec)
+         (let ((*default-condition* 'length-mismatch))
+           (syntax-error ',spec "Length mismatch. ~S but ~S" ',spec ,var)))
+      `(if (typep ,var '(and atom (not list)))
+           ,(if (flet ((check (s)
+                         (and (symbolp s) (find (extended-marker s) "*?"))))
+                  (do ((s spec (cdr s)))
+                      ((atom s) (or (null s) (check s)))
+                    (unless (check (car s))
+                      (return nil))))
+                `(syntax-error ',name "~A: Require LIST but ~S" ',name ,name)
+                `(syntax-error ',name "~A: Require CONS but ~S" ',name ,name))
+           (check-cons ,var ,(<spec-form> spec name) ',spec))))
 
 ;; <REQUIRE-FORM>
 
@@ -385,14 +495,7 @@
                 (list form)
                 `((declare (ignore ,name)) nil))))))
 
-;; <*FORM>
-
-(defun <*form> (name spec+)
-  `(,name (,name)
-    (if (typep ,name '(and atom (not null)))
-        (let ((*default-condition* 'violate-list))
-          (syntax-error ',name "~A: Require LIST but ~S." ',name ,name))
-        ,(<*form-body> name spec+))))
+;; <+FORM>
 
 (declaim
  (ftype (function (symbol list) (values function &optional)) resignaler))
@@ -455,189 +558,88 @@
                             args)
                :do (multiple-value-call (resignaler ',name ,args) ,@forms)))))
 
-;; <LOCAL-CHECK-FORM>
-
-(defun <local-check-form> (name var spec)
-  (cond
-    ((millet:type-specifier-p spec) (<local-type-check-form> name var spec))
-    ((atom spec) (<local-atom-check-form> name var spec))
-    ((typep spec '(cons (eql or) *)) (<local-or-check-form> name var spec))
-    ((consp spec) (<local-cons-check-form> name var spec))))
-
-(defun <check-type-form> (name var type-specifier)
-  `(unless (typep ,var ',type-specifier)
-     (syntax-error ',name "~A: ~S comes, it is type-of ~S." ',name ,var
-                   (type-of ,var))))
-
-(defun <local-type-check-form> (name var spec)
-  (cond ((t-p spec) nil)
-        ((eql nil (millet:type-expand spec))
-         (syntax-error 'check-bnf "NIL is invalid.~%HINT: NULL?"))
-        (t (<check-type-form> name var spec))))
-
-(defun <local-atom-check-form> (name var spec)
-  (multiple-value-bind (but mark)
-      (but-extended-marker spec)
-    (case mark
-      ((#\+ #\*)
-       `(funcall
-          (,(find-symbol (format nil "~C-CHECKER" mark) :check-bnf) ',name
-           #',but)
-          ,var))
-      (otherwise `(,spec ,var)))))
-
-(defun <local-or-check-form> (name var spec)
-  (if (t-p spec)
-      nil
-      `(block nil
-         (tagbody
-          ,@(loop :for (spec . rest) :on (cdr spec)
-                  :collect `(handler-case ,(<local-check-form> name var spec)
-                              (syntax-error ()
-                                ,(if rest
-                                     nil
-                                     `(syntax-error ',name "~A: ~S comes."
-                                                    ',name ,var)))
-                              (:no-error (&rest args)
-                                (declare (ignore args))
-                                (return))))))))
-
-;;;; SPEC the intermediate object.
-
-(defstruct (spec (:constructor spec (name checker)))
-  (name (error "Name is Required for spec.") :type symbol :read-only t)
-  (checker (error "Checker is Required for spec.") :type function :read-only t))
-
-(defun check-cons (actual-args specs name)
-  (flet ((check (actual null-thunk spec)
-           (typecase actual
-             (null (funcall null-thunk))
-             (atom (local-check actual spec))
-             (otherwise (local-check (car actual) spec))))
-         (length-mismatch ()
-           (let ((*default-condition* 'length-mismatch))
-             (syntax-error name "Length mismatch. ~S but ~S" name
-                           actual-args))))
-    (do ((actual actual-args (cdr actual))
-         (specs specs (cdr specs)))
-        ((atom specs)
-         (matrix-case:matrix-typecase (actual specs)
-           ((null null))
-           ((atom t) (local-check actual specs))
-           (otherwise (length-mismatch))))
-      (let ((elt (car specs)))
-        (if (spec-p elt)
-            (case (extended-marker (spec-name elt))
-              (#\?
-               (handler-case (check actual (lambda ()) elt)
-                 (syntax-error (c)
-                   (if (cdr specs)
-                       (push "dummy" actual)
-                       (error (the condition c))))))
-              ((#\*)
-               (handler-case (local-check actual elt)
-                 (may-syntax-error (condition)
-                   (if (cdr specs)
-                       (setf actual
-                               (cons "dummy"
-                                     (car
-                                       (last
-                                         (simple-condition-format-arguments
-                                           condition)))))
-                       (error (the condition condition))))
-                 (:no-error (&rest _)
-                   (declare (ignore _))
-                   (setf actual nil))))
-              ((#\+) (local-check actual elt) (setf actual nil))
-              (otherwise (check actual #'length-mismatch elt)))
-            (check actual #'length-mismatch elt))))))
-
-(defun <local-cons-check-form> (name var spec)
-  (if (t-p spec)
-      `(unless (cons-equal ,var ',spec)
-         (let ((*default-condition* 'length-mismatch))
-           (syntax-error ',spec "Length mismatch. ~S but ~S" ',spec ,var)))
-      `(if (typep ,var '(and atom (not list)))
-           ,(if (flet ((check (s)
-                         (and (symbolp s) (find (extended-marker s) "*?"))))
-                  (do ((s spec (cdr s)))
-                      ((atom s) (or (null s) (check s)))
-                    (unless (check (car s))
-                      (return nil))))
-                `(syntax-error ',name "~A: Require LIST but ~S" ',name ,name)
-                `(syntax-error ',name "~A: Require CONS but ~S" ',name ,name))
-           (check-cons ,var ,(<spec-form> spec name) ',spec))))
-
-(defun <spec-form> (spec name)
-  (flet ((may-checker-form (thing)
-           (if (t-p thing)
-               `(constantly nil)
-               `(lambda (x) ,(<check-type-form> spec 'x thing)))))
-    (cond ((null spec) nil)
-          ((millet:type-specifier-p spec) `',spec)
-          ((atom spec)
-           (multiple-value-bind (but mark)
-               (but-extended-marker spec)
-             `(spec ',spec
-                    ,(if (find mark "+*?")
-                         (if (assoc but *bnf*)
-                             (ecase mark
-                               (#\+ `(+-checker ',name #',but))
-                               (#\* `(*-checker ',name #',but))
-                               (#\? `#',but))
-                             (if (millet:type-specifier-p but)
-                                 (ecase mark
-                                   (#\+
-                                    `(+-checker ',name
-                                                ,(may-checker-form but)))
-                                   (#\*
-                                    `(*-checker ',name
-                                                ,(may-checker-form but)))
-                                   (#\? (may-checker-form but)))
-                                 `#',spec))
-                         `#',spec))))
-          ((typep spec '(cons (eql or) *))
-           `(lambda (x) ,(<local-or-check-form> name 'x spec)))
-          ((consp spec)
-           `(cons ,(<spec-form> (car spec) name)
-                  ,(<spec-form> (cdr spec) name))))))
-
-(declaim
- (ftype (function (t t)
-         (values null ; or signals an error.
-                 &optional))
-        local-check))
-
-(defun local-check (name spec)
-  (cond
-    ((millet:type-specifier-p spec)
-     (unless (eql t (millet:type-expand spec))
-       (unless (locally
-                (declare (optimize (speed 1))) ; due to spec is dynamic.
-                (typep name spec))
-         (syntax-error name "but ~S, it is type-of ~S" name (type-of name)))))
-    ((spec-p spec) (funcall (spec-checker spec) name))
-    ((typep spec '(cons (eql or) *))
-     (loop :for (spec+ . rest) :on (cdr spec)
-           :if (null rest)
-             :do (handler-case (local-check name spec+)
-                   (syntax-error ()
-                     (syntax-error name "~S := ~S but not exhausted. ~S" name
-                                   spec spec+)))
-           :else
-             :do (ignore-errors (local-check name spec+))))
-    ((consp spec) (check-cons name spec spec))
-    ((functionp spec) (funcall spec name))
-    (t (error "NIY: Name: ~S, Spec ~S" name spec))))
-
-;; <+FORM>
-
 (defun <+form> (name spec+)
   (let ((*form (<*form-body> name spec+)))
     `(,name (,name)
       (if (atom ,name)
           (syntax-error ',name "~A: Require CONS but ~S" ',name ,name)
           ,*form))))
+
+;; <*FORM>
+
+(defun <*form> (name spec+)
+  `(,name (,name)
+    (if (typep ,name '(and atom (not null)))
+        (let ((*default-condition* 'violate-list))
+          (syntax-error ',name "~A: Require LIST but ~S." ',name ,name))
+        ,(<*form-body> name spec+))))
+
+;;; <LOCAL-FUN>
+
+(defun <local-fun> (clause)
+  (destructuring-bind
+      (var-spec . spec+)
+      clause
+    (let ((name (alexandria:ensure-car var-spec)))
+      (case (extended-marker name)
+        (#\+ (<+form> name spec+))
+        (#\* (<*form> name spec+))
+        (otherwise (<require-form> name spec+))))))
+
+;;;; CHECK-BNF
+
+(defmacro check-bnf (&whole whole (&key ((:whole whole?))) &body def+)
+  ;; THIS IS THE WHAT WE WANT TO WRITE.
+  #++
+  (check-bnf (:whole whole :name 'check-bnf)
+    ((whole (or null expression)))
+    ((def+ (clause+))
+     (clause (var-spec spec+))
+     (var-spec (or bnf-name alias))
+     (bnf-name symbol)
+     (alias (bnf-name var-name))
+     (var-name symbol)
+     (spec+ (or type-specifier bnf-name or-form spec+))
+     (or-form ((eql or) spec+))))
+  #+(not :check-bnf)
+  (return-from check-bnf nil)
+  ;; THIS IS THE WHAT WE WANT TO GENERATE.
+  (labels ((def+ (def+)
+             (if (null def+)
+                 (syntax-error 'def+ "Require at least one, but null")
+                 (loop :for (var-spec . spec+) :in (apply #'append def+)
+                       :do (var-spec var-spec)
+                           (spec+ spec+))))
+           (var-spec (var-spec)
+             (unless (typep var-spec
+                            '(or symbol (cons symbol (cons symbol null))))
+               (syntax-error 'var-spec "but ~S" var-spec)))
+           (spec+ (spec+)
+             (if (null spec+)
+                 (syntax-error 'spec+ "Require at least one, but null"))))
+    (let ((*whole* whole))
+      (def+ def+)))
+  ;; Body of CHECK-BNF.
+  (let ((forms
+         (loop :for def :in def+
+               :for *bnf*
+                    = (mapcar
+                        (lambda (clause)
+                          (cons (alexandria:ensure-car (car clause))
+                                (cdr clause)))
+                        def)
+               :for (fun-name var-name) = (alexandria:ensure-list (caar def))
+               :if (or (and (cddar def) (not (every #'t-p (cdar def))))
+                       (find (extended-marker fun-name) "*+")
+                       (and (null (cddar def)) (not (t-p (cadar def)))))
+                 :collect `(let ((*whole* ,whole?) (*bnf* ',*bnf*))
+                             (labels ,(loop :for clause :in def
+                                            :collect (<local-fun> clause))
+                               (,fun-name ,(or var-name fun-name)))))))
+    (typecase forms
+      (null forms)
+      ((cons * null) (car forms))
+      (otherwise `(progn ,@forms)))))
 
 (defun *-checker (name cont)
   (declare (type function cont))
