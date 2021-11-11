@@ -83,7 +83,7 @@ SBCL
 * CCL/1.12.1
 * CLISP/2.49
 * CMUCL/21D
-* ECL/21.2.1 ; Failed.
+* ECL/21.2.1
 * Allegro/10.1 ; Failed.
 * ABCL/1.8.0
 
@@ -106,9 +106,6 @@ CHECK-BNF works fine but the printed message is a little bit strange in abcl
 due to [the abcl pretty printing issue](https://github.com/armedbear/abcl/issues/406).
 
 Currently tests about pretty printings are ignored.
-
-#### ECL
-Currently CHECK-BNF stop to support ECL due to [ECL specific issue](https://gitlab.com/embeddable-common-lisp/ecl/-/issues/570).
 
 #### allegro
 Currently CHECK-BNF stop to support allegro due to allegro specific issue.
