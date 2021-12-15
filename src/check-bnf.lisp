@@ -50,7 +50,11 @@
   (let ((acc))
     (labels ((rec (thing)
                (let ((definition
-                      (or (assoc thing bnf)
+                      (or (locally
+                           #+sbcl
+                           (declare
+                             (sb-ext:muffle-conditions sb-ext:compiler-note))
+                           (assoc thing bnf))
                           (assoc (but-extended-marker thing) bnf))))
                  (if definition
                      (progn
