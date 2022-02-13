@@ -370,8 +370,9 @@
   (cond
     ((millet:type-specifier-p spec)
      (unless (eql t (millet:type-expand spec))
-       (unless (locally
-                (declare (optimize (speed 1))) ; due to spec is dynamic.
+       (unless (locally ; due to spec is dynamic.
+		 #+sbcl
+                (declare (sb-ext:muffle-conditions sb-ext:compiler-note))
                 (typep name spec))
          (syntax-error name "but ~S, it is type-of ~S" name (type-of name)))))
     ((spec-p spec) (funcall (spec-checker spec) name))
