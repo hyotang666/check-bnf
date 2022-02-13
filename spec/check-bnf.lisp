@@ -441,7 +441,7 @@
 		  abcl) ; [2]
             (string= (princ-to-string condition)
                      (format nil "OTHER := SYMBOL*~2%~
-                             OTHER*: \"not option nor other*\" comes, it is type-of ~S.~%  ~
+                             OTHER*: \"not option nor other*\" comes, it is type-of ~:_~S.~%  ~
                              in (\"not option nor other*\" AND OTHERS)"
                              (type-of "not option nor other*")))))
 
@@ -775,13 +775,13 @@
 
 ;; Millet does not support retrive lambda-list from c2mop:funcallable-object.
 ;; Some implementations can retrieve.
-#-(or ccl ecl abcl)
+#-(or ccl ecl abcl allegro)
 #?(millet:lambda-list #'<lambda-list>)
 :satisfies (lambda (lambda-list)
 	     (& (typep lambda-list '(cons symbol null))))
 
 ; When this guard failed, we may cleanup :ignore-signals bellow.
-#+(or abcl ccl)
+#+(or abcl ccl allegro)
 #?(millet:lambda-list #'<lambda-list>) => ()
 
 #+ecl

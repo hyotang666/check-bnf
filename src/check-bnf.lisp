@@ -24,7 +24,7 @@
   ;; CHECK-BNF depends on the system "millet" the wrapper of implementation dependent utilities.
   ;; Impls bellow are supported by millet.
   ;; Comment outed impls are not supported due to it has its own issues.
-  #+(or sbcl ccl cmucl clisp abcl ecl #|lispworks|# #|allegro|# #|clasp|#)
+  #+(or sbcl ccl cmucl clisp abcl ecl #|lispworks|# allegro #|clasp|#)
   (pushnew :check-bnf *features*))
 
 (eval-when (:load-toplevel)
@@ -476,7 +476,7 @@
       `(unless (cons-equal ,var ',spec)
          (let ((*default-condition* 'length-mismatch))
            (syntax-error ',spec "Length mismatch. ~S but ~S" ',spec ,var)))
-      `(if (typep ,var '(and atom (not list)))
+      `(if (typep ,var '(and atom (not null)))
            ,(if (flet ((check (s)
                          (and (symbolp s) (find (extended-marker s) "*?"))))
                   (do ((s spec (cdr s)))
