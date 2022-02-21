@@ -46,15 +46,32 @@
 
 ;;;; CONDITION
 
+(defun extended-marker (name)
+  (let* ((length (length (symbol-name name)))
+         (char (and (< 1 length) (char (symbol-name name) (1- length)))))
+    (find char "+*?")))
+
+(declaim
+ (ftype (function (t) (values (or null symbol) (or null character) &optional))
+        but-extended-marker))
+
+(defun but-extended-marker (thing)
+  (if (not (symbolp thing))
+      (values nil nil)
+      (let ((mark (extended-marker thing)))
+        (case mark
+          ((#\? #\* #\+)
+           (let ((name (symbol-name thing)))
+             (values (intern (subseq name 0 (1- (length name)))
+                             (symbol-package thing))
+                     mark)))
+          (otherwise (values thing nil))))))
+
 (defun definitions (thing bnf)
   (let ((acc))
     (labels ((rec (thing)
                (let ((definition
-                      (or (locally
-                           #+sbcl
-                           (declare
-                             (sb-ext:muffle-conditions sb-ext:compiler-note))
-                           (assoc thing bnf))
+                      (or (assoc thing bnf)
                           (assoc (but-extended-marker thing) bnf))))
                  (if definition
                      (progn
@@ -137,27 +154,6 @@
 (defun cons-equal (list1 list2) (tree-equal list1 list2 :test (constantly t)))
 
 (defun ignored (arg) (declare (ignore arg)) nil)
-
-(defun extended-marker (name)
-  (let* ((length (length (symbol-name name)))
-         (char (and (< 1 length) (char (symbol-name name) (1- length)))))
-    (find char "+*?")))
-
-(declaim
- (ftype (function (t) (values (or null symbol) (or null character) &optional))
-        but-extended-marker))
-
-(defun but-extended-marker (thing)
-  (if (not (symbolp thing))
-      (values nil nil)
-      (let ((mark (extended-marker thing)))
-        (case mark
-          ((#\? #\* #\+)
-           (let ((name (symbol-name thing)))
-             (values (intern (subseq name 0 (1- (length name)))
-                             (symbol-package thing))
-                     mark)))
-          (otherwise (values thing nil))))))
 
 (defmacro capture-syntax-error (form)
   `(handler-case ,form
