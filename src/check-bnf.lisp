@@ -642,8 +642,10 @@
       ((cons * null) (car forms))
       (otherwise `(progn ,@forms)))))
 
+(declaim
+ (ftype (function (symbol function) (values function &optional)) *-checker))
+
 (defun *-checker (name cont)
-  (declare (type function cont))
   (lambda (arg)
     (if (typep arg '(and atom (not null)))
         (let ((*default-condition* 'violate-list))
