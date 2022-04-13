@@ -492,6 +492,7 @@
              name)
       (let ((form (<local-check-form> name name (car spec+))))
         `(,name (,name)
+          #+sbcl (declare (sb-ext:muffle-conditions sb-ext:compiler-note))
           ,@(if form
                 (list form)
                 `((declare (ignore ,name)) nil))))))
