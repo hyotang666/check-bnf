@@ -679,6 +679,14 @@
                              SUPPLIEDP     := VAR?~2%~
                              <LAMBDA-LIST>: Require LIST but \"not-list\""))))
 
+;; Support compound type specifier.
+;; ISSUE: Right side expression may be type specifier accidentally?
+;; e.g. (vector spec)
+#?(let ((index 3))
+    (check-bnf ()
+      ((index (mod #.array-total-size-limit)))))
+=> NIL
+
 (requirements-about expression :doc-type type)
 ;;;; description:
 ;;;; compound type specifier kind:

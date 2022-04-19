@@ -73,11 +73,13 @@
                (let ((definition
                       (or (assoc thing bnf)
                           (assoc (but-extended-marker thing) bnf))))
-                 (if definition
-                     (progn
-                      (pushnew definition acc :key #'car)
-                      (body (cdr definition)))
-                     (typecase thing (cons (body thing))))))
+                 (cond
+                   (definition
+                    (pushnew definition acc :key #'car)
+                    (body (cdr definition)))
+                   ((typep thing '(not cons)) nil)
+                   ((millet:type-specifier-p thing) nil)
+                   (t (body thing)))))
              (body (list)
                (dolist (spec list)
                  (declare (type (not number) spec))
