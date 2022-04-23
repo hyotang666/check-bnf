@@ -75,18 +75,24 @@
           (otherwise (values thing nil))))))
 
 (defun definitions (thing bnf)
+  "Collect definitions that related to THING from BNF"
   (let ((acc))
     (labels ((rec (thing)
                (let ((definition
                       (or (assoc thing bnf)
                           (assoc (but-extended-marker thing) bnf))))
-                 (cond
-                   (definition
-                    (pushnew definition acc :key #'car)
-                    (body (cdr definition)))
-                   ((typep thing '(not cons)) nil)
-                   ((millet:type-specifier-p thing) nil)
-                   (t (body thing)))))
+                 (cond ;; THING is bnf left side name.
+                       (definition
+                        ;; In order to keep the order
+                        ;; do pushnew/nreverse rather than push/delete-duplicates.
+                        (pushnew definition acc :key #'car)
+                        (body (cdr definition)))
+                       ;; THING is bnf right side atom, i.e. left side name or type specifier.
+                       ((typep thing '(not cons)) nil)
+                       ;; THING is bnf right side compound type specifier.
+                       ((millet:type-specifier-p thing) nil)
+                       ;; THING is bnf right side specs.
+                       (t (body thing)))))
              (body (list)
                (dolist (spec list)
                  (declare (type (not number) spec))
