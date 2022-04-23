@@ -46,7 +46,14 @@
 
 ;;;; CONDITION
 
+(deftype extended-marker () '(member #\+ #\* #\?))
+
+(declaim
+ (ftype (function (symbol) (values (or null extended-marker) &optional))
+        extended-marker))
+
 (defun extended-marker (name)
+  "Return extended-marker if NAME has, otherwirse nil."
   (let* ((length (length (symbol-name name)))
          (char (and (< 1 length) (char (symbol-name name) (1- length)))))
     (find char "+*?")))
