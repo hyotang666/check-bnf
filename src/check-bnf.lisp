@@ -297,29 +297,21 @@
   (declare (ignore noise))
   (setf stream (or stream *standard-output*))
   (pprint-logical-block (stream definitions)
-    (funcall
-      (formatter
-       #.(apply #'concatenate 'string
-                (alexandria:flatten
-                  (list "~{" ; definitions
-                        (list "~{" ; each line.
-                              "~VA := " ; name.
-                              "~/check-bnf:pprint-def-clause/" ; def-clause.
-                              "~@[~A~]~:@_" ; extended marker.
-                              "~}")
-                        "~}"))))
-      stream
-      (let ((num
-             (reduce #'max definitions
-                     :initial-value 0
-                     :key (alexandria:compose 'length 'string
-                                              'but-extended-marker 'car))))
-        (mapcar
-          (lambda (definition)
-            (multiple-value-bind (name mark)
-                (but-extended-marker (car definition))
-              (list num name (cdr definition) mark)))
-          definitions)))))
+    (let ((num
+           (reduce #'max definitions
+                   :initial-value 0
+                   :key (alexandria:compose 'length 'string
+                                            'but-extended-marker 'car))))
+      (dolist (definition definitions)
+        (multiple-value-bind (name mark)
+            (but-extended-marker (car definition))
+          (funcall
+            (formatter
+             #.(concatenate 'string "~VA := " ; name.
+                            "~/check-bnf:pprint-def-clause/" ; def-clause.
+                            "~@[~A~]~:@_" ; extended marker.
+                            ))
+            stream num name (cdr definition) mark))))))
 
 ;;;; SPEC the intermediate object.
 
