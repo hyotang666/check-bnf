@@ -565,7 +565,7 @@
                                                               ,length))
                                                  ',spec+ ,args)))
                             args)
-               :do (multiple-value-call (resignaler ',name ,args) ,@forms)))))
+               :do (funcall (resignaler ',name ,args) ,@forms)))))
 
 (defun <+form> (name spec+)
   (let ((*form (<*form-body> name spec+)))

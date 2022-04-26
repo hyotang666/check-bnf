@@ -138,7 +138,7 @@
                                                         (mod (length args) 2))
                                                 '(keyword t)
                                                 args)))
-                       :DO (MULTIPLE-VALUE-CALL
+                       :DO (FUNCALL
                                (check-bnf::RESIGNALER 'OPTION* args)
                              (check-bnf::CAPTURE-SYNTAX-ERROR
                               (UNLESS (TYPEP G11516 'KEYWORD)
