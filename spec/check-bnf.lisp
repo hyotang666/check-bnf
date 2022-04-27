@@ -349,6 +349,13 @@
 :signals syntax-error
 ,:lazy t
 
+; NAME must not be a type name.
+#?(deftype type-name () 'symbol) => TYPE-NAME
+#?(check-bnf ()
+    ((type-name 'symbol)))
+:signals syntax-error
+,:lazy t
+
 ; clause require one or more, otherwise syntax error.
 #?(check-bnf ())
 :signals syntax-error

@@ -622,7 +622,10 @@
            (var-spec (var-spec)
              (unless (typep var-spec
                             '(or symbol (cons symbol (cons symbol null))))
-               (syntax-error 'var-spec "but ~S" var-spec)))
+               (syntax-error 'var-spec "but ~S" var-spec))
+             (when (millet:type-specifier-p (alexandria:ensure-car var-spec))
+               (syntax-error 'var-spec "~S is already used as a type name."
+                             (alexandria:ensure-car var-spec))))
            (spec+ (spec+)
              (if (null spec+)
                  (syntax-error 'spec+ "Require at least one, but null"))))
