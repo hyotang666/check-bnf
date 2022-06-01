@@ -319,7 +319,7 @@
   (name (error "Name is Required for spec.") :type symbol :read-only t)
   (checker (error "Checker is Required for spec.") :type function :read-only t))
 
-(defun check-cons (actual-args specs name)
+(defun check-cons (actual-args specs names)
   (flet ((check (actual null-thunk spec)
            (typecase actual
              (null (funcall null-thunk))
@@ -327,7 +327,7 @@
              (otherwise (local-check (car actual) spec))))
          (length-mismatch ()
            (let ((*default-condition* 'length-mismatch))
-             (syntax-error name "Length mismatch. ~S but ~S" name
+             (syntax-error names "Length mismatch. ~S but ~S" names
                            actual-args))))
     (do ((actual actual-args (cdr actual))
          (specs specs (cdr specs)))
