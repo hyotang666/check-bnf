@@ -369,28 +369,29 @@
                  &optional))
         local-check))
 
-(defun local-check (name spec)
+(defun local-check (actual spec)
   (cond
     ((millet:type-specifier-p spec)
      (unless (eql t (millet:type-expand spec))
        (unless (locally ; due to spec is dynamic.
-		 #+sbcl
+                #+sbcl
                 (declare (sb-ext:muffle-conditions sb-ext:compiler-note))
-                (typep name spec))
-         (syntax-error name "but ~S, it is type-of ~S" name (type-of name)))))
-    ((spec-p spec) (funcall (spec-checker spec) name))
+                (typep actual spec))
+         (syntax-error spec "but ~S, it is type-of ~S" actual
+                       (type-of actual)))))
+    ((spec-p spec) (funcall (spec-checker spec) actual))
     ((typep spec '(cons (eql or) *))
      (loop :for (spec+ . rest) :on (cdr spec)
            :if (null rest)
-             :do (handler-case (local-check name spec+)
+             :do (handler-case (local-check actual spec+)
                    (syntax-error ()
-                     (syntax-error name "~S := ~S but not exhausted. ~S" name
+                     (syntax-error spec "~S := ~S but not exhausted. ~S" actual
                                    spec spec+)))
            :else
-             :do (ignore-errors (local-check name spec+))))
-    ((consp spec) (check-cons name spec spec))
-    ((functionp spec) (funcall spec name))
-    (t (error "NIY: Name: ~S, Spec ~S" name spec))))
+             :do (ignore-errors (local-check actual spec+))))
+    ((consp spec) (check-cons actual spec spec))
+    ((functionp spec) (funcall spec actual))
+    (t (error "NIY: Actual: ~S, Spec: ~S" actual spec))))
 
 ;;;; FORMS
 
