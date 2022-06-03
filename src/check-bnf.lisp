@@ -112,17 +112,15 @@
        (funcall
          (formatter
           #.(concatenate 'string "~<" ; pprint-logical-block
-                         "~@[Syntax-error in ~S~:@_~2I~:@_~]" ; header.
-                         "~/check-bnf:pprint-definitions/~I~:@_" ; body
                          "~?" ; format-control
-                         "~@[~:@_~:@_in ~S~]" ; whole
+                         "~2I~:@_Definition~:@_~:@_~/check-bnf:pprint-definitions/" ; body
+                         "~@[~I~:@_in ~S~]" ; whole
                          "~:>"))
          stream
-         (list (car (whole-form<=syntax-error condition))
+         (list (simple-condition-format-control condition)
+               (simple-condition-format-arguments condition)
                (definitions (cell-error-name condition)
                             (bnf-definitions condition))
-               (simple-condition-format-control condition)
-               (simple-condition-format-arguments condition)
                (whole-form<=syntax-error condition))))))
   (:default-initargs :format-control ""))
 
@@ -302,16 +300,16 @@
                    :initial-value 0
                    :key (alexandria:compose 'length 'string
                                             'but-extended-marker 'car))))
-      (dolist (definition definitions)
-        (multiple-value-bind (name mark)
-            (but-extended-marker (car definition))
-          (funcall
-            (formatter
-             #.(concatenate 'string "~VA := " ; name.
-                            "~/check-bnf:pprint-def-clause/" ; def-clause.
-                            "~@[~A~]~:@_" ; extended marker.
-                            ))
-            stream num name (cdr definition) mark))))))
+      (loop :for (definition . rest) :on definitions
+            :do (multiple-value-bind (name mark)
+                    (but-extended-marker (car definition))
+                  (funcall
+                    (formatter
+                     #.(concatenate 'string "~VA := " ; name.
+                                    "~/check-bnf:pprint-def-clause/" ; def-clause.
+                                    "~@[~A~]~@[~:@_~]" ; extended marker.
+                                    ))
+                    stream num name (cdr definition) mark rest))))))
 
 ;;;; SPEC the intermediate object.
 
@@ -377,7 +375,7 @@
                 #+sbcl
                 (declare (sb-ext:muffle-conditions sb-ext:compiler-note))
                 (typep actual spec))
-         (syntax-error spec "but ~S, it is type-of ~S" actual
+         (syntax-error spec "~S : ~S comes. It is type-of ~S" spec actual
                        (type-of actual)))))
     ((spec-p spec) (funcall (spec-checker spec) actual))
     ((typep spec '(cons (eql or) *))
@@ -397,7 +395,7 @@
 
 (defun <check-type-form> (name var type-specifier)
   `(unless (typep ,var ',type-specifier)
-     (syntax-error ',name "~A: ~S comes, it is type-of ~S." ',name ,var
+     (syntax-error ',name "~A : ~S comes. It is type-of ~S." ',name ,var
                    (type-of ,var))))
 
 (defun <local-type-check-form> (name var spec)
@@ -433,11 +431,21 @@
          (tagbody
           ,@(loop :for (spec . rest) :on (cdr spec)
                   :collect `(handler-case ,(<local-check-form> name var spec)
-                              (syntax-error ()
+                              (violate-list ()
                                 ,(if rest
                                      nil
-                                     `(syntax-error ',name "~A: ~S comes."
+                                     `(syntax-error ',name "~A : ~S comes."
                                                     ',name ,var)))
+                              (syntax-error (c)
+                                (declare (ignorable c))
+                                ,(if rest
+                                     nil
+                                     `(syntax-error ',name
+                                                    "~A : ~S comes.~:[~:@_Last failed at ~A.~;~]"
+                                                    ',name ,var
+                                                    (eq ',name
+                                                        (cell-error-name c))
+                                                    (cell-error-name c))))
                               (:no-error (&rest args)
                                 (declare (ignore args))
                                 (return))))))))
@@ -488,8 +496,8 @@
                       ((atom s) (or (null s) (check s)))
                     (unless (check (car s))
                       (return nil))))
-                `(syntax-error ',name "~A: Require LIST but ~S" ',name ,name)
-                `(syntax-error ',name "~A: Require CONS but ~S" ',name ,name))
+                `(syntax-error ',name "~A require LIST but ~S." ',name ,name)
+                `(syntax-error ',name "~A require CONS but ~S." ',name ,name))
            (check-cons ,var ,(<spec-form> spec name) ',spec))))
 
 ;; <REQUIRE-FORM>
@@ -528,7 +536,7 @@
                               :collect (simple-condition-format-control c)
                               :and :collect (simple-condition-format-arguments
                                               c))
-                      "~2I~:@_in ~S~I" actual-args)))))
+                      "~:@_in ~S" actual-args)))))
 
 (defun <*form-body> (name spec+)
   (let* ((length (list-length spec+))
@@ -559,7 +567,7 @@
                                  ,args
                                  (let ((*default-condition* 'may-syntax-error))
                                    (syntax-error ',name
-                                                 "~A: Length mismatch. Lack last ~{~S~^ ~} of ~S~:@_~S"
+                                                 "~A : Length mismatch. Lack last ~{~S~^ ~} of ~S~:@_in ~S"
                                                  ',name
                                                  (subseq ',spec+
                                                          (mod (length ,args)
@@ -572,7 +580,7 @@
   (let ((*form (<*form-body> name spec+)))
     `(,name (,name)
       (if (atom ,name)
-          (syntax-error ',name "~A: Require CONS but ~S" ',name ,name)
+          (syntax-error ',name "~A require CONS but ~S." ',name ,name)
           ,*form))))
 
 ;; <*FORM>
@@ -581,7 +589,7 @@
   `(,name (,name)
     (if (typep ,name '(and atom (not null)))
         (let ((*default-condition* 'violate-list))
-          (syntax-error ',name "~A: Require LIST but ~S." ',name ,name))
+          (syntax-error ',name "~A require LIST but ~S." ',name ,name))
         ,(<*form-body> name spec+))))
 
 ;;; <LOCAL-FUN>
@@ -661,7 +669,7 @@
   (lambda (arg)
     (if (typep arg '(and atom (not null)))
         (let ((*default-condition* 'violate-list))
-          (syntax-error name "~A: Require LIST but ~S." name arg))
+          (syntax-error name "~A require LIST but ~S." name arg))
         (loop :for rest :on arg
               :do (handler-case (funcall elt-checker (car rest))
                     (syntax-error (c)
@@ -677,7 +685,7 @@
   (declare (type function elt-checker))
   (lambda (arg)
     (if (atom arg)
-        (syntax-error name "~A: Require CONS but ~S" name arg)
+        (syntax-error name "~A require CONS but ~S." name arg)
         (handler-case (mapc elt-checker arg)
           (syntax-error (c)
             (apply #'syntax-error name
