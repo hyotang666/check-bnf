@@ -114,14 +114,12 @@
           #.(concatenate 'string "~<" ; pprint-logical-block
                          "~?" ; format-control
                          "~2I~:@_Definition~:@_~:@_~/check-bnf:pprint-definitions/" ; body
-                         "~@[~I~:@_in ~S~]" ; whole
                          "~:>"))
          stream
          (list (simple-condition-format-control condition)
                (simple-condition-format-arguments condition)
                (definitions (cell-error-name condition)
-                            (bnf-definitions condition))
-               (whole-form<=syntax-error condition))))))
+                            (bnf-definitions condition)))))))
   (:default-initargs :format-control ""))
 
 (define-condition violate-list (syntax-error) ())

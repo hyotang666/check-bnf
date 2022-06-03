@@ -341,10 +341,8 @@
             (equal (format nil
                            "A : \"not-symbol\" comes. It is type-of ~S.~%  ~
 			   Definition~2%  ~
-                           A := SYMBOL~%~
-                           in ~S"
-                           (type-of "not-symbol")
-                           '(whole ("not-symbol")))
+                           A := SYMBOL"
+                           (type-of "not-symbol"))
                    (princ-to-string condition))))
 
 ; def := (clause+)+
