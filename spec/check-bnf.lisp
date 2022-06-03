@@ -432,7 +432,9 @@
          (& #-clisp ; [1]
             (string= (princ-to-string condition)
                      (format nil "FUNCTION-NAME : \"not function-name\" comes.~%~
-			     Last failed at SETF-NAME.~%  Definition~2%  ~
+			     Last failed at SETF-NAME.~%  ~
+			     Detail: SETF-NAME require CONS but \"not function-name\".~2%  ~
+			     Definition~2%  ~
 			     FUNCTION-NAME := [ NAME | SETF-NAME ]~%  ~
                              NAME          := SYMBOL~%  ~
                              SETF-NAME     := ((EQL SETF) NAME)"))))
@@ -514,9 +516,7 @@
                      (format nil
                              "B : \"string\" comes. It is type-of ~S.~%~
                              in (\"string\")~%  Definition~2%  ~
-			     VAR := (A* B*)~%  ~
-                             A   := SYMBOL~%  ~
-                             B   := INTEGER"
+                             B := INTEGER"
                              (type-of "string")))))
 
 ; Key value pair in heads.
@@ -620,9 +620,14 @@
          (& #-clisp ; [1]
             (string= (princ-to-string condition)
                      (format nil
-                             "VAR : (\"string\" \"list\") comes.~%  Definition~2%  ~
+                             "VAR : (\"string\" \"list\") comes.~%~
+			     Last failed at NAME.~%  ~
+			     Detail: NAME : \"string\" comes. It is type-of ~S.~%          ~
+			     in (\"string\" \"list\")~2%  ~
+			     Definition~2%  ~
 			     VAR  := [ STRING | NAME* ]~%  ~
-                             NAME := SYMBOL"))))
+                             NAME := SYMBOL"
+			     (type-of "string")))))
 
 ;; right side xxx?
 #?(let ((ll nil))

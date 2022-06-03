@@ -441,11 +441,15 @@
                                 ,(if rest
                                      nil
                                      `(syntax-error ',name
-                                                    "~A : ~S comes.~:[~:@_Last failed at ~A.~;~]"
+                                                    "~A : ~S comes.~:[~:@_Last failed at ~A.~2I~:@_Detail: ~:I~?~I~:@_~;~]"
                                                     ',name ,var
                                                     (eq ',name
                                                         (cell-error-name c))
-                                                    (cell-error-name c))))
+                                                    (cell-error-name c)
+                                                    (simple-condition-format-control
+                                                      c)
+                                                    (simple-condition-format-arguments
+                                                      c))))
                               (:no-error (&rest args)
                                 (declare (ignore args))
                                 (return))))))))
@@ -464,16 +468,16 @@
                     ,(if (find mark "+*?")
                          (if (assoc but *bnf*)
                              (ecase mark
-                               (#\+ `(+-checker ',name #',but))
-                               (#\* `(*-checker ',name #',but))
+                               (#\+ `(+-checker ',spec #',but))
+                               (#\* `(*-checker ',spec #',but))
                                (#\? `#',but))
                              (if (millet:type-specifier-p but)
                                  (ecase mark
                                    (#\+
-                                    `(+-checker ',name
+                                    `(+-checker ',spec
                                                 ,(may-checker-form but)))
                                    (#\*
-                                    `(*-checker ',name
+                                    `(*-checker ',spec
                                                 ,(may-checker-form but)))
                                    (#\? (may-checker-form but)))
                                  `#',spec))
@@ -674,7 +678,7 @@
               :do (handler-case (funcall elt-checker (car rest))
                     (syntax-error (c)
                       (let ((*default-condition* 'may-syntax-error))
-                        (apply #'syntax-error name
+                        (apply #'syntax-error (cell-error-name c)
                                (concatenate 'string
                                             (simple-condition-format-control c)
                                             "~@?")
