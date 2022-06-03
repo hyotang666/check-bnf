@@ -657,13 +657,13 @@
 (declaim
  (ftype (function (symbol function) (values function &optional)) *-checker))
 
-(defun *-checker (name cont)
+(defun *-checker (name elt-checker)
   (lambda (arg)
     (if (typep arg '(and atom (not null)))
         (let ((*default-condition* 'violate-list))
           (syntax-error name "~A: Require LIST but ~S." name arg))
         (loop :for rest :on arg
-              :do (handler-case (funcall cont (car rest))
+              :do (handler-case (funcall elt-checker (car rest))
                     (syntax-error (c)
                       (let ((*default-condition* 'may-syntax-error))
                         (apply #'syntax-error name
@@ -673,12 +673,12 @@
                                (append (simple-condition-format-arguments c)
                                        (list "~:@_in ~S" rest))))))))))
 
-(defun +-checker (name cont)
-  (declare (type function cont))
+(defun +-checker (name elt-checker)
+  (declare (type function elt-checker))
   (lambda (arg)
     (if (atom arg)
         (syntax-error name "~A: Require CONS but ~S" name arg)
-        (handler-case (mapc cont arg)
+        (handler-case (mapc elt-checker arg)
           (syntax-error (c)
             (apply #'syntax-error name
                    (concatenate 'string (simple-condition-format-control c)
