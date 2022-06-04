@@ -107,6 +107,16 @@ due to [the abcl pretty printing issue](https://github.com/armedbear/abcl/issues
 
 Currently tests about pretty printings are ignored.
 
+#### Allegro
+Allegro insert pprint logical block automatically for condition.
+Consequently, error message format becomes different from other implementations.
+Two tests about error message format are skipped.
+
+```
+(simple-condition-format-control (make-condition 'simple-condition :format-control ""))
+=> "~1@<~:@>"
+```
+
 ## Installation
 
 quicklisp supported.
