@@ -20,23 +20,26 @@ It helps the third person to understand your macro.
 ## Usage
 
 ```lisp
-(defmacro defun (&whole whole name lambda-list &body body)
+* (defmacro mydefun (&whole whole name lambda-list &body body)
   (check-bnf (:whole whole)
     ((name (or symbol setf-name))
      (setf-name ((eql setf) symbol)))
     ((lambda-list list)))
   (list* name lambda-list body))
 
-(defun "name" () :dummy)
-;; SYNTAX-ERROR
-  Syntax-error in DEFUN
+MYDEFUN
+* (mydefun "name" () :dummy)
 
-NAME      := [ SYMBOL | SETF-NAME ]
-SETF-NAME := ((EQL SETF) SYMBOL)
+debugger invoked on a SYNTAX-ERROR in thread
+#<THREAD "main thread" RUNNING {10016C0073}>:
+  NAME : "name" comes.
+  Last failed at SETF-NAME.
+    Detail: SETF-NAME require CONS but "name".
 
-but "name"
+    Definition
 
-in (DEFUN "name" NIL :DUMMY)
+    NAME      := [ SYMBOL | SETF-NAME ]
+    SETF-NAME := ((EQL SETF) SYMBOL)
 ```
 
 For detail, see [spec file](spec/check-bnf.lisp).
