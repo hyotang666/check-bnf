@@ -409,6 +409,7 @@
       ((option (or null symbol)))))
 => nil
 
+#-allegro
 #?(let ((option "not-symbol"))
     (check-bnf ()
       ((option (or null symbol)))))
@@ -610,6 +611,7 @@
 			     VAR  := [ STRING | NAME* ]~%  ~
                              NAME := SYMBOL"))))
 
+#-allegro
 #?(let ((var '("string" "list")))
     (check-bnf ()
       ((var (or string name*))
