@@ -9,9 +9,10 @@
 ; CLISP specific guard [1]
 #+clisp
 #?(pprint-logical-block (*standard-output* nil)
-    (check-bnf::pprint-definitions nil '((var symbol))))
-:outputs " VAR := SYMBOL
- "
+    (pprint-logical-block (*standard-output* nil)
+      (format t "~VA" 3 'var)))
+:outputs " VAR"
+,:comment "When this guard failed, spec annotated [1] should be fixed."
 
 ; ABCL has issue about mandatory newline. [2]
 #+abcl
